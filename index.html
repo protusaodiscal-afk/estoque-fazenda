@@ -3,198 +3,215 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão de Insumos</title>
+  <title>Estoque Fazenda - Mamão Formosa</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    :root {
+      --farmgreen: #2f7d32;
+      --farmdark: #1b4d1f;
+      --farmyellow: #f4c430;
+      --farmcream: #f7f7f0;
+      --farmgray: #4a4a4a;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--farmcream) 0%, #eef6e9 100%);
+      color: var(--farmgray);
       min-height: 100vh;
-      padding: 24px;
-      color: #1f2937;
-    }
-
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
     }
 
     header {
-      text-align: center;
-      color: #ffffff;
-      margin-bottom: 28px;
+      background: linear-gradient(135deg, var(--farmgreen) 0%, var(--farmdark) 100%);
+      color: #fff;
+      padding: 22px 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     header h1 {
-      font-size: 2rem;
+      font-size: 1.6rem;
       letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    header p {
-      opacity: 0.85;
-      margin-top: 6px;
+    header h1::before {
+      content: '🌾';
+      font-size: 1.8rem;
+    }
+
+    header .badge {
+      background: var(--farmyellow);
+      color: var(--farmdark);
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 24px;
     }
 
     .card {
-      background: #ffffff;
+      background: #fff;
       border-radius: 14px;
-      padding: 24px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-      margin-bottom: 24px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(47, 125, 50, 0.12);
+      border-top: 5px solid var(--farmgreen);
     }
 
     .card h2 {
-      margin-bottom: 16px;
-      color: #1e3c72;
-      font-size: 1.25rem;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
+      color: var(--farmdark);
+      margin-bottom: 18px;
+      font-size: 1.2rem;
+      border-bottom: 2px solid var(--farmyellow);
+      padding-bottom: 8px;
     }
 
     label {
       display: block;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      color: #374151;
+      margin: 12px 0 6px;
       font-weight: 600;
+      color: var(--farmdark);
+      font-size: 0.9rem;
     }
 
-    input, select, button {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid #d1d5db;
+      border: 1.5px solid #cfe0c4;
       border-radius: 8px;
       font-size: 0.95rem;
-      outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fbfdf8;
     }
 
-    input:focus, select:focus {
-      border-color: #2a5298;
-      box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--farmgreen);
+      box-shadow: 0 0 0 3px rgba(47, 125, 50, 0.15);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
     button {
-      cursor: pointer;
+      background: var(--farmgreen);
+      color: #fff;
       border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
-      color: #ffffff;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-      transition: transform 0.05s, opacity 0.2s;
+      cursor: pointer;
+      margin-top: 18px;
+      width: 100%;
+      transition: background 0.2s, transform 0.1s;
     }
 
     button:hover {
-      opacity: 0.92;
+      background: var(--farmdark);
     }
 
     button:active {
-      transform: translateY(1px);
+      transform: scale(0.98);
     }
 
-    .btn-secondary {
-      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    button.secondary {
+      background: var(--farmyellow);
+      color: var(--farmdark);
     }
 
-    .actions {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
+    button.secondary:hover {
+      background: #e0b327;
     }
 
-    .search-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
     }
 
-    .search-row input {
-      flex: 1;
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid #e6efe0;
+      font-size: 0.88rem;
     }
 
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    th {
+      background: var(--farmgreen);
+      color: #fff;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
     }
 
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      background: #f9fafb;
+    tr:nth-child(even) {
+      background: #f5faf2;
     }
 
-    .item-info strong {
-      color: #1e3c72;
-    }
-
-    .item-info span {
-      display: block;
-      font-size: 0.85rem;
-      color: #6b7280;
-      margin-top: 2px;
-    }
-
-    .item-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .item-actions button {
-      width: auto;
-      padding: 6px 12px;
-      font-size: 0.85rem;
+    tr:hover {
+      background: #eef7e6;
     }
 
     .empty {
       text-align: center;
-      color: #9ca3af;
-      padding: 24px;
+      color: #888;
+      padding: 20px;
       font-style: italic;
     }
 
-    .bula {
-      margin-top: 14px;
-      padding: 14px 16px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
+    .bula-box {
+      background: #fffbe6;
+      border: 1.5px dashed var(--farmyellow);
       border-radius: 10px;
-      color: #1e3c72;
-      font-size: 0.92rem;
-      line-height: 1.5;
+      padding: 14px;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      color: var(--farmdark);
       display: none;
     }
 
-    .bula.visible {
-      display: block;
+    .bula-box h3 {
+      margin-bottom: 8px;
+      color: var(--farmgreen);
     }
 
     .toast {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #1e3c72;
+      background: var(--farmdark);
       color: #fff;
-      padding: 12px 18px;
+      padding: 14px 20px;
       border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
       opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.25s, transform 0.25s;
-      pointer-events: none;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 999;
     }
 
     .toast.show {
@@ -203,243 +220,356 @@
     }
 
     .toast.error {
-      background: #b91c1c;
+      background: #b3261e;
+    }
+
+    .toast.success {
+      background: var(--farmgreen);
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-ok { background: #d4f4d2; color: var(--farmdark); }
+    .status-low { background: #fde2c1; color: #8a5a00; }
+    .status-out { background: #f8d2cf; color: #8a1c12; }
+
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Gestão de Insumos</h1>
-      <p>Cadastro e consulta de insumos conectado ao Supabase</p>
-    </header>
+  <header>
+    <h1>Estoque Fazenda - Mamão Formosa</h1>
+    <span class="badge" id="connBadge">Conectando...</span>
+  </header>
 
+  <main>
+    <!-- Formulário -->
     <section class="card">
-      <h2>Adicionar Insumo</h2>
-      <form id="form-insumo">
-        <div class="form-grid">
+      <h2>Registrar Insumo</h2>
+      <form id="formInsumo">
+        <label for="nome">Nome do Produto</label>
+        <input type="text" id="nome" placeholder="Ex: Glifosato, Roundup, Pottasium" required />
+
+        <div class="row">
           <div>
-            <label for="nome">Nome</label>
-            <input type="text" id="nome" required placeholder="Ex.: Dipirona" />
-          </div>
-          <div>
-            <label for="quantidade">Quantidade</label>
-            <input type="number" id="quantidade" min="0" required placeholder="Ex.: 50" />
-          </div>
-          <div>
-            <label for="unidade">Unidade</label>
-            <select id="unidade">
-              <option value="comprimido">comprimido</option>
-              <option value="ml">ml</option>
-              <option value="mg">mg</option>
-              <option value="ampola">ampola</option>
-              <option value="unidade">unidade</option>
+            <label for="categoria">Categoria</label>
+            <select id="categoria" required>
+              <option value="Defensivo Agrícola">Defensivo Agrícola</option>
+              <option value="Fertilizante">Fertilizante</option>
+              <option value="Semente">Semente</option>
+              <option value="Ferramenta">Ferramenta</option>
+              <option value="Outro">Outro</option>
             </select>
           </div>
           <div>
-            <label for="validade">Validade</label>
-            <input type="date" id="validade" />
-          </div>
-          <div class="actions">
-            <button type="submit">Salvar Insumo</button>
-            <button type="reset" class="btn-secondary">Limpar</button>
+            <label for="quantidade">Quantidade</label>
+            <input type="number" id="quantidade" min="0" step="0.01" placeholder="0" required />
           </div>
         </div>
+
+        <div class="row">
+          <div>
+            <label for="unidade">Unidade</label>
+            <input type="text" id="unidade" placeholder="L, Kg, Un, g" required />
+          </div>
+          <div>
+            <label for="estoqueMin">Estoque Mínimo</label>
+            <input type="number" id="estoqueMin" min="0" step="0.01" placeholder="0" />
+          </div>
+        </div>
+
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" rows="2" placeholder="Anotações sobre o produto..."></textarea>
+
+        <button type="submit">Salvar Insumo</button>
+        <button type="button" class="secondary" id="btnBula">Simular Bula</button>
       </form>
+
+      <div class="bula-box" id="bulaBox">
+        <h3>📋 Bula Simulada</h3>
+        <div id="bulaContent"></div>
+      </div>
     </section>
 
+    <!-- Listagem -->
     <section class="card">
-      <h2>Buscar Bula (Simulação)</h2>
-      <div class="search-row">
-        <input type="text" id="busca-bula" placeholder="Digite o nome do medicamento..." />
-        <button type="button" id="btn-buscar-bula">Buscar Bula</button>
+      <h2>Insumos em Estoque</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Qtd</th>
+              <th>Un.</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaInsumos">
+            <tr><td colspan="6" class="empty">Carregando insumos...</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div id="bula-resultado" class="bula"></div>
     </section>
+  </main>
 
-    <section class="card">
-      <h2>Insumos Cadastrados</h2>
-      <div class="search-row">
-        <input type="text" id="busca-insumo" placeholder="Filtrar por nome..." />
-        <button type="button" id="btn-atualizar" class="btn-secondary">Atualizar Lista</button>
-      </div>
-      <div id="lista-insumos" class="list">
-        <div class="empty">Carregando insumos...</div>
-      </div>
-    </section>
-  </div>
-
-  <div id="toast" class="toast"></div>
-
-  <!-- Supabase JS SDK via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div class="toast" id="toast"></div>
 
   <script>
     // ============================================================
-    // CONFIGURAÇÃO DO SUPABASE
-    // Preencha os valores abaixo com as credenciais do seu projeto.
+    // CONFIGURAÇÃO SUPABASE
+    // Substitua pelos valores reais do seu projeto Supabase
     // ============================================================
     const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // ============================================================
-    // ELEMENTOS DA DOM
-    // ============================================================
-    const formInsumo = document.getElementById('form-insumo');
-    const listaInsumos = document.getElementById('lista-insumos');
-    const buscaInsumo = document.getElementById('busca-insumo');
-    const btnAtualizar = document.getElementById('btn-atualizar');
-    const buscaBula = document.getElementById('busca-bula');
-    const btnBuscarBula = document.getElementById('btn-buscar-bula');
-    const bulaResultado = document.getElementById('bula-resultado');
-    const toast = document.getElementById('toast');
-
-    let insumosCache = [];
+    let supabaseClient = null;
+    try {
+      if (window.supabase && SUPABASE_URL && SUPABASE_KEY &&
+          !SUPABASE_URL.includes('YOUR-PROJECT') && !SUPABASE_KEY.includes('YOUR-')) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        document.getElementById('connBadge').textContent = 'Supabase Conectado';
+        document.getElementById('connBadge').style.background = '#d4f4d2';
+        document.getElementById('connBadge').style.color = '#1b4d1f';
+      } else {
+        document.getElementById('connBadge').textContent = 'Modo Demo (configure Supabase)';
+        document.getElementById('connBadge').style.background = '#fde2c1';
+        document.getElementById('connBadge').style.color = '#8a5a00';
+      }
+    } catch (err) {
+      console.error('Erro ao conectar Supabase:', err);
+      document.getElementById('connBadge').textContent = 'Erro de Conexão';
+      document.getElementById('connBadge').style.background = '#f8d2cf';
+      document.getElementById('connBadge').style.color = '#8a1c12';
+    }
 
     // ============================================================
     // UTILITÁRIOS
     // ============================================================
-    function showToast(message, isError = false) {
-      toast.textContent = message;
-      toast.classList.toggle('error', isError);
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => { toast.className = 'toast ' + type; }, 3000);
     }
 
-    function formatarData(data) {
-      if (!data) return '—';
-      const d = new Date(data);
-      return d.toLocaleDateString('pt-BR');
+    function statusPill(qtd, min) {
+      const q = parseFloat(qtd) || 0;
+      const m = parseFloat(min) || 0;
+      if (q <= 0) return '<span class="status-pill status-out">Sem estoque</span>';
+      if (m > 0 && q <= m) return '<span class="status-pill status-low">Baixo</span>';
+      return '<span class="status-pill status-ok">OK</span>';
     }
 
     // ============================================================
-    // SUPABASE: CARREGAR INSUMOS
+    // SALVAR INSUMO (Supabase - tabela 'insumos')
     // ============================================================
-    async function carregarInsumos() {
-      try {
-        const { data, error } = await supabase.from('insumos').select('*');
-        if (error) throw error;
-
-        insumosCache = data || [];
-        renderizarInsumos();
-      } catch (err) {
-        console.error('Erro ao carregar insumos:', err);
-        showToast('Erro ao carregar insumos do banco.', true);
-        listaInsumos.innerHTML = '<div class="empty">Erro ao carregar insumos.</div>';
+    async function salvarInsumo(payload) {
+      if (!supabaseClient) {
+        // Modo demo: salva em memória local
+        const local = JSON.parse(localStorage.getItem('insumos_demo') || '[]');
+        const item = { id: Date.now(), ...payload, created_at: new Date().toISOString() };
+        local.push(item);
+        localStorage.setItem('insumos_demo', JSON.stringify(local));
+        return item;
       }
+
+      const { data, error } = await supabaseClient
+        .from('insumos')
+        .insert([payload])
+        .select();
+
+      if (error) throw error;
+
+      // Registra movimentação de entrada
+      if (data && data[0]) {
+        await supabaseClient.from('movimentacoes').insert([{
+          insumo_id: data[0].id,
+          tipo: 'entrada',
+          quantidade: payload.quantidade,
+          observacao: 'Cadastro inicial'
+        }]);
+      }
+
+      return data[0];
     }
 
     // ============================================================
-    // SUPABASE: SALVAR INSUMO
+    // LISTAR INSUMOS (Supabase - tabela 'insumos')
     // ============================================================
-    async function salvarInsumo(event) {
-      event.preventDefault();
+    async function listarInsumos() {
+      if (!supabaseClient) {
+        return JSON.parse(localStorage.getItem('insumos_demo') || '[]');
+      }
 
-      const novoInsumo = {
-        nome: document.getElementById('nome').value.trim(),
-        quantidade: parseInt(document.getElementById('quantidade').value, 10),
-        unidade: document.getElementById('unidade').value,
-        validade: document.getElementById('validade').value || null
-      };
+      const { data, error } = await supabaseClient
+        .from('insumos')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (!novoInsumo.nome) {
-        showToast('Informe o nome do insumo.', true);
+      if (error) throw error;
+      return data || [];
+    }
+
+    // ============================================================
+    // EXCLUIR INSUMO
+    // ============================================================
+    async function excluirInsumo(id) {
+      if (!supabaseClient) {
+        const local = JSON.parse(localStorage.getItem('insumos_demo') || '[]');
+        const filtrado = local.filter(i => i.id !== id);
+        localStorage.setItem('insumos_demo', JSON.stringify(filtrado));
         return;
       }
+      const { error } = await supabaseClient.from('insumos').delete().eq('id', id);
+      if (error) throw error;
+    }
 
+    // ============================================================
+    // RENDERIZAR TABELA
+    // ============================================================
+    async function renderTabela() {
+      const tbody = document.getElementById('tabelaInsumos');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Carregando insumos...</td></tr>';
       try {
-        const { data, error } = await supabase.from('insumos').insert([novoInsumo]).select();
-        if (error) throw error;
-
-        if (data && data.length) {
-          insumosCache.push(data[0]);
+        const insumos = await listarInsumos();
+        if (!insumos.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum insumo cadastrado.</td></tr>';
+          return;
         }
-        renderizarInsumos();
-        formInsumo.reset();
-        showToast('Insumo salvo com sucesso!');
+        tbody.innerHTML = insumos.map(i => `
+          <tr>
+            <td>${i.nome || '-'}</td>
+            <td>${i.categoria || '-'}</td>
+            <td>${i.quantidade ?? 0}</td>
+            <td>${i.unidade || '-'}</td>
+            <td>${statusPill(i.quantidade, i.estoque_minimo)}</td>
+            <td><button class="secondary" style="width:auto;padding:4px 10px;margin:0;font-size:0.8rem;" onclick="removerInsumo('${i.id}')">Excluir</button></td>
+          </tr>
+        `).join('');
       } catch (err) {
-        console.error('Erro ao salvar insumo:', err);
-        showToast('Erro ao salvar insumo no banco.', true);
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar insumos.</td></tr>';
+        showToast('Erro ao listar insumos: ' + err.message, 'error');
       }
     }
 
-    // ============================================================
-    // RENDERIZAÇÃO
-    // ============================================================
-    function renderizarInsumos() {
-      const filtro = buscaInsumo.value.trim().toLowerCase();
-      const lista = filtro
-        ? insumosCache.filter(i => (i.nome || '').toLowerCase().includes(filtro))
-        : insumosCache;
-
-      if (!lista.length) {
-        listaInsumos.innerHTML = '<div class="empty">Nenhum insumo cadastrado.</div>';
-        return;
+    window.removerInsumo = async function(id) {
+      if (!confirm('Deseja realmente excluir este insumo?')) return;
+      try {
+        await excluirInsumo(id);
+        showToast('Insumo excluído!', 'success');
+        renderTabela();
+      } catch (err) {
+        showToast('Erro ao excluir: ' + err.message, 'error');
       }
-
-      listaInsumos.innerHTML = lista.map(insumo => `
-        <div class="item">
-          <div class="item-info">
-            <strong>${insumo.nome}</strong>
-            <span>Quantidade: ${insumo.quantidade} ${insumo.unidade || ''} • Validade: ${formatarData(insumo.validade)}</span>
-          </div>
-          <div class="item-actions">
-            <button type="button" onclick="buscarBulaPorNome('${insumo.nome.replace(/'/g, "\\'")}')">Ver Bula</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    };
 
     // ============================================================
-    // SIMULAÇÃO DE BUSCA DE BULA
+    // SIMULAÇÃO DE BULA (exemplos agrícolas)
     // ============================================================
-    function simularBula(nome) {
-      const bulas = {
-        dipirona: 'Dipirona: analgésico e antitérmico. Posologia: 500mg a 1000mg, de 6 em 6 horas. Contraindicações: gravidez e discrasias sanguíneas.',
-        paracetamol: 'Paracetamol: analgésico e antitérmico. Posologia: 500mg a 750mg, de 4 em 4 horas. Contraindicações: insuficiência hepática.',
-        ibuprofeno: 'Ibuprofeno: anti-inflamatório não esteroide. Posologia: 400mg a 600mg, de 8 em 8 horas. Contraindicações: úlcera péptica.',
-        amoxicilina: 'Amoxicilina: antibiótico penicilínico. Posologia: 500mg, de 8 em 8 horas. Contraindicações: alergia a penicilina.'
+    const bulasExemplo = {
+      'glifosato': {
+        nome: 'Glifosato',
+        classe: 'Herbicida sistêmico de ação total',
+        dosagem: '2,0 a 4,0 L/ha conforme infestação',
+        toxicidade: 'Classe III - Medianamente tóxico',
+        carencia: 'Não se aplica (uso em pré-plantio)',
+        aplicacao: 'Pulverização com pulverizador costal ou tratorizado'
+      },
+      'roundup': {
+        nome: 'Roundup',
+        classe: 'Herbicida à base de Glifosato',
+        dosagem: '1,5 a 3,0 L/ha',
+        toxicidade: 'Classe III - Medianamente tóxico',
+        carencia: '0 dias (uso em pré-plantio)',
+        aplicacao: 'Pulverização foliar em plantas daninhas'
+      },
+      'pottasium': {
+        nome: 'Pottasium (Cloreto de Potássio)',
+        classe: 'Fertilizante potássico (KCl)',
+        dosagem: '150 a 300 Kg/ha conforme análise de solo',
+        toxicidade: 'Baixa toxicidade humana',
+        carencia: 'Não se aplica',
+        aplicacao: 'Adubação de base, incorporação ao solo'
+      }
+    };
+
+    function simularBula(nomeProduto) {
+      const key = (nomeProduto || '').toLowerCase().trim();
+      const encontrada = Object.keys(bulasExemplo).find(k => key.includes(k));
+      if (encontrada) {
+        return bulasExemplo[encontrada];
+      }
+      // Bula genérica baseada no nome
+      return {
+        nome: nomeProduto || 'Produto',
+        classe: 'Produto agrícola - classificação não identificada',
+        dosagem: 'Consultar recomendação técnica / agrônomo',
+        toxicidade: 'Verificar rótulo do fabricante',
+        carencia: 'Consultar bula oficial do fabricante',
+        aplicacao: 'Seguir orientação do responsável técnico'
       };
-
-      const chave = (nome || '').toLowerCase().trim();
-      const bula = bulas[chave];
-
-      if (bula) {
-        return bula;
-      }
-
-      return `Bula não encontrada para "${nome}". (Simulação) — Consulte um profissional de saúde ou a base oficial da ANVISA para mais informações.`;
-    }
-
-    function exibirBula(nome) {
-      const texto = simularBula(nome);
-      bulaResultado.textContent = texto;
-      bulaResultado.classList.add('visible');
-    }
-
-    function buscarBulaPorNome(nome) {
-      buscaBula.value = nome;
-      exibirBula(nome);
     }
 
     // ============================================================
     // EVENTOS
     // ============================================================
-    formInsumo.addEventListener('submit', salvarInsumo);
-    buscaInsumo.addEventListener('input', renderizarInsumos);
-    btnAtualizar.addEventListener('click', carregarInsumos);
-    btnBuscarBula.addEventListener('click', () => exibirBula(buscaBula.value));
-    buscaBula.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') exibirBula(buscaBula.value);
+    document.getElementById('formInsumo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        nome: document.getElementById('nome').value.trim(),
+        categoria: document.getElementById('categoria').value,
+        quantidade: parseFloat(document.getElementById('quantidade').value) || 0,
+        unidade: document.getElementById('unidade').value.trim(),
+        estoque_minimo: parseFloat(document.getElementById('estoqueMin').value) || 0,
+        observacao: document.getElementById('observacao').value.trim()
+      };
+
+      try {
+        await salvarInsumo(payload);
+        showToast('Insumo salvo com sucesso!', 'success');
+        document.getElementById('formInsumo').reset();
+        renderTabela();
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao salvar: ' + err.message, 'error');
+      }
     });
 
-    // ============================================================
-    // INICIALIZAÇÃO
-    // ============================================================
-    window.buscarBulaPorNome = buscarBulaPorNome;
-    document.addEventListener('DOMContentLoaded', carregarInsumos);
+    document.getElementById('btnBula').addEventListener('click', () => {
+      const nome = document.getElementById('nome').value.trim();
+      if (!nome) {
+        showToast('Digite o nome do produto para simular a bula.', 'error');
+        return;
+      }
+      const bula = simularBula(nome);
+      const box = document.getElementById('bulaBox');
+      const content = document.getElementById('bulaContent');
+      content.innerHTML = `
+        <p><strong>Produto:</strong> ${bula.nome}</p>
+        <p><strong>Classe:</strong> ${bula.classe}</p>
+        <p><strong>Dosagem:</strong> ${bula.dosagem}</p>
+        <p><strong>Toxicidade:</strong> ${bula.toxicidade}</p>
+        <p><strong>Carência:</strong> ${bula.carencia}</p>
+        <p><strong>Aplicação:</strong> ${bula.aplicacao}</p>
+        <p style="margin-top:8px;font-size:0.78rem;color:#8a5a00;">⚠️ Simulação para fins didáticos. Consulte sempre a bula oficial do fabricante.</p>
+      `;
+      box.style.display = 'block';
+    });
+
+    // Inicialização
+    renderTabela();
   </script>
 </body>
 </html>
