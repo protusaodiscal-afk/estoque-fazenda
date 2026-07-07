@@ -6,392 +6,471 @@
   <title>Nelcir - Gestão de Insumos Agrícolas</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f6f8;
-      color: #2c3e50;
-      padding: 20px;
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: #f4f6f8; color: #2c3e50; }
+
+    /* Aviso CORS */
+    .cors-warning {
+      background: #fff3cd; color: #856404; padding: 10px 20px; text-align: center;
+      font-size: 14px; border-bottom: 1px solid #ffeeba;
     }
+    .cors-warning a { color: #533f03; font-weight: bold; }
+
     header {
-      background: #1b5e20;
-      color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+      color: #fff; padding: 20px; text-align: center;
     }
-    header h1 { font-size: 1.6rem; }
-    .panic-btn {
-      background: #d32f2f;
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background 0.2s;
+    header h1 { font-size: 26px; }
+    header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+
+    nav {
+      display: flex; justify-content: center; gap: 10px; background: #fff;
+      padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10;
     }
-    .panic-btn:hover { background: #b71c1c; }
-    section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    nav button {
+      padding: 10px 22px; border: none; background: #e8f5e9; color: #2e7d32;
+      border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }
-    h2 { color: #1b5e20; margin-bottom: 15px; }
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-    }
+    nav button:hover { background: #c8e6c9; }
+    nav button.active { background: #2e7d32; color: #fff; }
+
+    main { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
     .card {
-      background: #e8f5e9;
-      border-left: 5px solid #1b5e20;
-      padding: 15px;
-      border-radius: 6px;
+      background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .card h3 { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
-    .card p { font-size: 1.8rem; font-weight: bold; color: #1b5e20; }
-    .search-form {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 15px;
+    .card h2 { color: #2e7d32; margin-bottom: 16px; font-size: 20px; }
+
+    /* Dashboard */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .stat {
+      background: linear-gradient(135deg, #43a047, #2e7d32); color: #fff;
+      padding: 20px; border-radius: 10px; text-align: center;
     }
-    input[type="text"], select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      flex: 1;
-      min-width: 200px;
+    .stat .num { font-size: 32px; font-weight: bold; }
+    .stat .label { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+
+    /* Formulários e tabelas */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    label { display: block; font-size: 13px; margin-bottom: 4px; font-weight: 600; }
+    input, select {
+      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
     }
-    button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
+    .btn {
+      background: #2e7d32; color: #fff; border: none; padding: 10px 20px;
+      border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }
-    button:hover { opacity: 0.9; }
-    .btn-primary { background: #1b5e20; color: #fff; }
-    .btn-secondary { background: #1565c0; color: #fff; }
-    .btn-danger { background: #c62828; color: #fff; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    th { background: #1b5e20; color: #fff; }
-    tr:hover { background: #f1f8e9; }
-    .status { padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; }
-    .status-ok { background: #c8e6c9; color: #1b5e20; }
-    .status-low { background: #fff9c4; color: #f57f17; }
-    .status-out { background: #ffcdd2; color: #b71c1c; }
-    #resultArea { margin-top: 15px; }
+    .btn:hover { background: #1b5e20; }
+    .btn.secondary { background: #1565c0; }
+    .btn.secondary:hover { background: #0d47a1; }
+    .btn.danger { background: #c62828; }
+    .btn.danger:hover { background: #b71c1c; }
+    .btn-row { margin-top: 12px; display: flex; gap: 10px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f1f8e9; color: #2e7d32; }
+    tr:hover { background: #f9fbe7; }
+
+    .search-box { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-box input { flex: 1; }
+
     .result-item {
-      background: #f9f9f9;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      background: #f9fbe7; border-left: 4px solid #2e7d32; padding: 12px;
+      margin-bottom: 10px; border-radius: 4px;
     }
-    .loading { color: #1565c0; font-style: italic; }
-    .error { color: #b71c1c; font-weight: bold; }
-    .success { color: #1b5e20; font-weight: bold; }
+    .result-item h3 { color: #1b5e20; font-size: 16px; }
+    .result-item p { font-size: 13px; margin-top: 4px; color: #555; }
+    .result-item .add-btn { margin-top: 8px; }
+
+    .msg { padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+    .msg.success { background: #e8f5e9; color: #2e7d32; }
+    .msg.error { background: #ffebee; color: #c62828; }
+    .msg.info { background: #e3f2fd; color: #1565c0; }
+
+    .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
+    .loading { text-align: center; padding: 20px; color: #666; }
+
     @media (max-width: 600px) {
-      header h1 { font-size: 1.2rem; }
-      .card p { font-size: 1.4rem; }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+
+  <div class="cors-warning">
+    ⚠️ <strong>Aviso:</strong> A busca na Embrapa usa um proxy CORS público (<a href="https://cors-anywhere.herokuapp.com/" target="_blank">cors-anywhere</a>).
+    Se a busca falhar, acesse o link e clique em "Request temporary access" para liberar o proxy.
+  </div>
+
   <header>
-    <h1>🌱 Nelcir - Gestão de Insumos Agrícolas</h1>
-    <a class="panic-btn" href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" rel="noopener noreferrer">
-      🚨 Liberar Proxy CORS
-    </a>
+    <h1>🌿 Nelcir - Gestão de Insumos Agrícolas</h1>
+    <p>Dashboard, Busca Embrapa e Controle de Estoque</p>
   </header>
 
-  <!-- DASHBOARD -->
-  <section id="dashboard">
-    <h2>📊 Dashboard</h2>
-    <div class="dashboard">
-      <div class="card"><h3>Total de Insumos</h3><p id="totalInsumos">0</p></div>
-      <div class="card"><h3>Em Estoque</h3><p id="totalEstoque">0</p></div>
-      <div class="card"><h3>Estoque Baixo</h3><p id="totalBaixo">0</p></div>
-      <div class="card"><h3>Esgotados</h3><p id="totalEsgotado">0</p></div>
-    </div>
-  </section>
+  <nav>
+    <button class="active" onclick="showSection('dashboard', this)">📊 Dashboard</button>
+    <button onclick="showSection('busca', this)">🔍 Busca Embrapa</button>
+    <button onclick="showSection('estoque', this)">📦 Estoque</button>
+  </nav>
 
-  <!-- BUSCA EMBRAPA -->
-  <section id="buscaEmbrapa">
-    <h2>🔍 Busca Embrapa</h2>
-    <div class="search-form">
-      <input type="text" id="termoBusca" placeholder="Digite o nome do produto ou ingrediente..." />
-      <select id="tipoBusca">
-        <option value="produto">Produto</option>
-        <option value="ingrediente">Ingrediente Ativo</option>
-        <option value="registro">Número de Registro</option>
-      </select>
-      <button class="btn-primary" onclick="buscarEmbrapa()">Buscar</button>
-    </div>
-    <div id="resultArea"></div>
-  </section>
+  <main>
 
-  <!-- TABELA DE ESTOQUE -->
-  <section id="tabelaEstoque">
-    <h2>📦 Estoque de Insumos</h2>
-    <div class="search-form">
-      <input type="text" id="filtroEstoque" placeholder="Filtrar estoque..." oninput="renderTabelaEstoque()" />
-      <button class="btn-secondary" onclick="carregarEstoque()">Atualizar</button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Ingrediente Ativo</th>
-          <th>Nº Registro</th>
-          <th>Quantidade</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="estoqueBody"></tbody>
-    </table>
-  </section>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section active">
+      <div class="card">
+        <h2>📊 Visão Geral</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="num" id="statTotal">0</div>
+            <div class="label">Total de Insumos</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="statEstoque">0</div>
+            <div class="label">Quantidade em Estoque</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="statBaixo">0</div>
+            <div class="label">Itens com Estoque Baixo (≤5)</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="statIngredientes">0</div>
+            <div class="label">Ingredientes Ativos Diferentes</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📋 Insumos Recentes</h2>
+        <div id="recentesTable"><div class="loading">Carregando...</div></div>
+      </div>
+    </section>
+
+    <!-- BUSCA EMBRAPA -->
+    <section id="busca" class="section">
+      <div class="card">
+        <h2>🔍 Buscar Produtos na Embrapa (Agrofit)</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:12px;">
+          A busca é feita por <strong>marca comercial</strong> na API oficial da Embrapa.
+        </p>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Digite a marca comercial (ex: Roundup)..." onkeydown="if(event.key==='Enter') buscarEmbrapa()" />
+          <button class="btn" onclick="buscarEmbrapa()">Buscar</button>
+        </div>
+        <div id="searchMsg"></div>
+        <div id="searchResults"></div>
+      </div>
+    </section>
+
+    <!-- ESTOQUE -->
+    <section id="estoque" class="section">
+      <div class="card">
+        <h2>➕ Adicionar / Atualizar Insumo</h2>
+        <div class="form-grid">
+          <div>
+            <label>Nome (Marca Comercial) *</label>
+            <input type="text" id="fNome" placeholder="Ex: Roundup" />
+          </div>
+          <div>
+            <label>Ingrediente Ativo</label>
+            <input type="text" id="fIngrediente" placeholder="Ex: Glifosato" />
+          </div>
+          <div>
+            <label>Número de Registro</label>
+            <input type="text" id="fRegistro" placeholder="Ex: 0008991-96" />
+          </div>
+          <div>
+            <label>Quantidade *</label>
+            <input type="number" id="fQuantidade" placeholder="Ex: 10" min="0" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="salvarInsumo()">💾 Salvar</button>
+          <button class="btn secondary" onclick="limparForm()">🧹 Limpar</button>
+        </div>
+        <div id="formMsg"></div>
+      </div>
+
+      <div class="card">
+        <h2>📦 Estoque de Insumos</h2>
+        <div class="search-box">
+          <input type="text" id="filterEstoque" placeholder="Filtrar por nome, ingrediente ou registro..." oninput="renderEstoque()" />
+        </div>
+        <div id="estoqueTable"><div class="loading">Carregando...</div></div>
+      </div>
+    </section>
+
+  </main>
 
   <script>
-    // ===== CREDENCIAIS FIXAS =====
+    // ===== Credenciais Fixas =====
     const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
     const EMBRAPA_TOKEN = '9c9499c1-7595-3271-a8f1-3f4c4cb4aee8';
     const CORS_PREFIX = 'https://cors-anywhere.herokuapp.com/';
-    const EMBRAPA_BASE = CORS_PREFIX + 'https://api.cnpatos.embrapa.br/agrofit/apis/v1/produtos';
+    const EMBRAPA_URL = 'https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados';
 
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let estoqueCache = [];
+    let insumosCache = [];
 
-    // ===== UTILITÁRIOS DE MAPEAMENTO =====
-    function extrairCampo(item, campos) {
-      if (!item) return '';
-      for (const c of campos) {
-        if (item[c] !== undefined && item[c] !== null && String(item[c]).trim() !== '') {
-          return String(item[c]).trim();
-        }
-      }
-      return '';
+    // ===== Navegação =====
+    function showSection(id, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (btn) btn.classList.add('active');
+      if (id === 'dashboard') carregarDashboard();
+      if (id === 'estoque') carregarEstoque();
     }
 
-    function extrairNome(item) {
-      return extrairCampo(item, ['marcaComercial', 'nomeProduto', 'nomeComercial', 'nome']);
+    // ===== Mensagens =====
+    function setMsg(elId, text, type) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.innerHTML = '<div class="msg ' + type + '">' + text + '</div>';
+      setTimeout(() => { el.innerHTML = ''; }, 4000);
     }
 
-    function extrairIngrediente(item) {
-      return extrairCampo(item, ['ingredienteAtivo', 'ingrediente_ativo', 'nomeTecnico', 'ingrediente', 'nome']);
-    }
-
-    function extrairRegistro(item) {
-      return extrairCampo(item, ['numeroRegistro', 'numero_registro', 'registro', 'nroRegistro', 'numRegistro']);
-    }
-
-    // ===== DASHBOARD =====
+    // ===== Dashboard =====
     async function carregarDashboard() {
       try {
-        const { data, error } = await supabaseClient.from('insumos').select('*');
+        const { data, error } = await supabase.from('insumos').select('*');
         if (error) throw error;
-        estoqueCache = data || [];
-        const total = estoqueCache.length;
-        const emEstoque = estoqueCache.filter(i => (i.quantidade || 0) > 5).length;
-        const baixo = estoqueCache.filter(i => (i.quantidade || 0) > 0 && (i.quantidade || 0) <= 5).length;
-        const esgotado = estoqueCache.filter(i => !i.quantidade || i.quantidade === 0).length;
-        document.getElementById('totalInsumos').textContent = total;
-        document.getElementById('totalEstoque').textContent = emEstoque;
-        document.getElementById('totalBaixo').textContent = baixo;
-        document.getElementById('totalEsgotado').textContent = esgotado;
-      } catch (err) {
-        console.error('Erro ao carregar dashboard:', err);
+        insumosCache = data || [];
+
+        const total = insumosCache.length;
+        const estoque = insumosCache.reduce((s, i) => s + (Number(i.quantidade) || 0), 0);
+        const baixo = insumosCache.filter(i => (Number(i.quantidade) || 0) <= 5).length;
+        const ingredientes = new Set(insumosCache.map(i => (i.ingrediente_ativo || '').trim()).filter(Boolean)).size;
+
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statEstoque').textContent = estoque;
+        document.getElementById('statBaixo').textContent = baixo;
+        document.getElementById('statIngredientes').textContent = ingredientes;
+
+        const recentes = insumosCache.slice(0, 5);
+        const cont = document.getElementById('recentesTable');
+        if (recentes.length === 0) {
+          cont.innerHTML = '<div class="empty">Nenhum insumo cadastrado.</div>';
+          return;
+        }
+        let html = '<table><thead><tr><th>Nome</th><th>Ingrediente Ativo</th><th>Registro</th><th>Qtd</th></tr></thead><tbody>';
+        recentes.forEach(i => {
+          html += '<tr><td>' + esc(i.nome) + '</td><td>' + esc(i.ingrediente_ativo) + '</td><td>' + esc(i.numero_registro) + '</td><td>' + (i.quantidade || 0) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        cont.innerHTML = html;
+      } catch (e) {
+        document.getElementById('recentesTable').innerHTML = '<div class="msg error">Erro ao carregar dashboard: ' + esc(e.message) + '</div>';
       }
     }
 
-    // ===== BUSCA EMBRAPA =====
+    // ===== Busca Embrapa =====
     async function buscarEmbrapa() {
-      const termo = document.getElementById('termoBusca').value.trim();
-      const tipo = document.getElementById('tipoBusca').value;
-      const resultArea = document.getElementById('resultArea');
+      const termo = document.getElementById('searchInput').value.trim();
+      const msgEl = document.getElementById('searchMsg');
+      const resEl = document.getElementById('searchResults');
 
       if (!termo) {
-        resultArea.innerHTML = '<p class="error">Digite um termo para buscar.</p>';
+        setMsg('searchMsg', 'Digite um termo para buscar.', 'error');
         return;
       }
 
-      resultArea.innerHTML = '<p class="loading">Buscando na Embrapa...</p>';
+      msgEl.innerHTML = '<div class="msg info">Buscando "' + esc(termo) + '" na Embrapa...</div>';
+      resEl.innerHTML = '<div class="loading">Aguarde... Se demorar, verifique o acesso ao proxy CORS.</div>';
 
       try {
-        const params = new URLSearchParams();
-        params.append('token', EMBRAPA_TOKEN);
-        if (tipo === 'produto') params.append('nomeProduto', termo);
-        else if (tipo === 'ingrediente') params.append('ingredienteAtivo', termo);
-        else if (tipo === 'registro') params.append('numeroRegistro', termo);
-
-        const url = EMBRAPA_BASE + '?' + params.toString();
+        const url = CORS_PREFIX + EMBRAPA_URL + '?marcaComercial=' + encodeURIComponent(termo);
         const resp = await fetch(url, {
-          headers: { 'Accept': 'application/json' }
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + EMBRAPA_TOKEN,
+            'Accept': 'application/json'
+          }
         });
 
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status + ' - ' + resp.statusText);
         const json = await resp.json();
-        const lista = json.data || json.produtos || json.resultado || json || [];
-        const itens = Array.isArray(lista) ? lista : [lista];
 
-        if (itens.length === 0) {
-          resultArea.innerHTML = '<p class="error">Nenhum resultado encontrado.</p>';
+        // Tenta localizar a lista de produtos em possíveis caminhos
+        let produtos = [];
+        if (Array.isArray(json)) produtos = json;
+        else if (json && Array.isArray(json.data)) produtos = json.data;
+        else if (json && json.data && Array.isArray(json.data.produtos)) produtos = json.data.produtos;
+        else if (json && Array.isArray(json.produtos)) produtos = json.produtos;
+        else if (json && json.result && Array.isArray(json.result)) produtos = json.result;
+        else produtos = [json];
+
+        if (produtos.length === 0) {
+          msgEl.innerHTML = '<div class="msg info">Nenhum produto encontrado para "' + esc(termo) + '".</div>';
+          resEl.innerHTML = '';
           return;
         }
 
-        resultArea.innerHTML = '';
-        itens.forEach(item => {
-          const nome = extrairNome(item) || 'Sem Nome';
-          const ingrediente = extrairIngrediente(item) || 'Não informado';
-          const registro = extrairRegistro(item) || 'Sem registro';
+        msgEl.innerHTML = '<div class="msg success">' + produtos.length + ' produto(s) encontrado(s).</div>';
+        let html = '';
+        produtos.forEach(p => {
+          // Mapeamento: marcaComercial como nome do produto
+          const nome = p.marcaComercial || p.marca_comercial || p.nome || p.nomeComercial || '—';
+          const ingrediente = p.ingredienteAtivo || p.ingrediente_ativo || p.ingrediente || '—';
+          const registro = p.numeroRegistro || p.numero_registro || p.registro || p.registroMapa || '—';
+          const classe = p.classeUso || p.classe || p.tipo || '—';
+          const titular = p.titularRegistro || p.titular || p.empresa || '—';
 
-          const div = document.createElement('div');
-          div.className = 'result-item';
-          div.innerHTML = `
-            <div>
-              <strong>${escapeHtml(nome)}</strong><br/>
-              <small>Ingrediente: ${escapeHtml(ingrediente)} | Registro: ${escapeHtml(registro)}</small>
-            </div>
-            <button class="btn-secondary" onclick="salvarInsumo('${escapeAttr(nome)}','${escapeAttr(ingrediente)}','${escapeAttr(registro)}')">
-              + Adicionar ao Estoque
-            </button>
-          `;
-          resultArea.appendChild(div);
+          html += '<div class="result-item">';
+          html += '<h3>' + esc(nome) + '</h3>';
+          html += '<p><strong>Ingrediente Ativo:</strong> ' + esc(ingrediente) + '</p>';
+          html += '<p><strong>Nº Registro:</strong> ' + esc(registro) + '</p>';
+          html += '<p><strong>Classe de Uso:</strong> ' + esc(classe) + '</p>';
+          html += '<p><strong>Titular:</strong> ' + esc(titular) + '</p>';
+          html += '<button class="btn add-btn" onclick="adicionarDaBusca(\'' + escAttr(nome) + '\', \'' + escAttr(ingrediente) + '\', \'' + escAttr(registro) + '\')">➕ Adicionar ao Estoque</button>';
+          html += '</div>';
         });
-      } catch (err) {
-        resultArea.innerHTML = '<p class="error">Erro na busca: ' + escapeHtml(err.message) + '. Verifique se o Proxy CORS está liberado (botão no topo).</p>';
+        resEl.innerHTML = html;
+      } catch (e) {
+        msgEl.innerHTML = '<div class="msg error">Erro na busca: ' + esc(e.message) + '. Verifique o proxy CORS.</div>';
+        resEl.innerHTML = '';
       }
     }
 
-    // ===== SALVAR NO BANCO =====
-    async function salvarInsumo(nome, ingrediente, registro) {
-      try {
-        const { data, error } = await supabaseClient
-          .from('insumos')
-          .insert([{
-            nome: nome || 'Sem Nome',
-            ingrediente_ativo: ingrediente || '',
-            numero_registro: registro || ''
-          }]);
-        if (error) throw error;
-        alert('Insumo adicionado ao estoque!');
-        await carregarEstoque();
-      } catch (err) {
-        alert('Erro ao salvar: ' + err.message);
-      }
+    function adicionarDaBusca(nome, ingrediente, registro) {
+      showSection('estoque', document.querySelectorAll('nav button')[2]);
+      document.getElementById('fNome').value = nome;
+      document.getElementById('fIngrediente').value = ingrediente !== '—' ? ingrediente : '';
+      document.getElementById('fRegistro').value = registro !== '—' ? registro : '';
+      document.getElementById('fQuantidade').focus();
+      setMsg('formMsg', 'Produto carregado! Informe a quantidade e salve.', 'info');
     }
 
-    // ===== TABELA DE ESTOQUE =====
+    // ===== Estoque =====
     async function carregarEstoque() {
       try {
-        const { data, error } = await supabaseClient.from('insumos').select('*').order('nome', { ascending: true });
+        const { data, error } = await supabase.from('insumos').select('*');
         if (error) throw error;
-        estoqueCache = data || [];
-        await carregarDashboard();
-        renderTabelaEstoque();
-      } catch (err) {
-        document.getElementById('estoqueBody').innerHTML = '<tr><td colspan="6" class="error">Erro ao carregar estoque: ' + escapeHtml(err.message) + '</td></tr>';
+        insumosCache = data || [];
+        renderEstoque();
+      } catch (e) {
+        document.getElementById('estoqueTable').innerHTML = '<div class="msg error">Erro ao carregar estoque: ' + esc(e.message) + '</div>';
       }
     }
 
-    function renderTabelaEstoque() {
-      const filtro = document.getElementById('filtroEstoque').value.toLowerCase();
-      const tbody = document.getElementById('estoqueBody');
-      const filtrados = estoqueCache.filter(i => {
-        const nome = (i.nome || '').toLowerCase();
-        const ing = (i.ingrediente_ativo || '').toLowerCase();
-        const reg = (i.numero_registro || '').toLowerCase();
-        return nome.includes(filtro) || ing.includes(filtro) || reg.includes(filtro);
-      });
+    function renderEstoque() {
+      const filtro = (document.getElementById('filterEstoque').value || '').toLowerCase();
+      let lista = insumosCache;
+      if (filtro) {
+        lista = insumosCache.filter(i =>
+          (i.nome || '').toLowerCase().includes(filtro) ||
+          (i.ingrediente_ativo || '').toLowerCase().includes(filtro) ||
+          (i.numero_registro || '').toLowerCase().includes(filtro)
+        );
+      }
 
-      if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum insumo cadastrado.</td></tr>';
+      const cont = document.getElementById('estoqueTable');
+      if (lista.length === 0) {
+        cont.innerHTML = '<div class="empty">Nenhum insumo encontrado.</div>';
         return;
       }
 
-      tbody.innerHTML = '';
-      filtrados.forEach(i => {
-        const qtd = i.quantidade || 0;
-        let statusClass = 'status-ok', statusText = 'Em estoque';
-        if (qtd === 0) { statusClass = 'status-out'; statusText = 'Esgotado'; }
-        else if (qtd <= 5) { statusClass = 'status-low'; statusText = 'Estoque baixo'; }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(i.nome || 'Sem Nome')}</td>
-          <td>${escapeHtml(i.ingrediente_ativo || '-')}</td>
-          <td>${escapeHtml(i.numero_registro || '-')}</td>
-          <td>${qtd}</td>
-          <td><span class="status ${statusClass}">${statusText}</span></td>
-          <td>
-            <button class="btn-secondary" onclick="atualizarQuantidade(${i.id}, ${qtd}, 1)">+1</button>
-            <button class="btn-danger" onclick="atualizarQuantidade(${i.id}, ${qtd}, -1)">-1</button>
-            <button class="btn-danger" onclick="removerInsumo(${i.id})">🗑</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
+      let html = '<table><thead><tr><th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th><th>Qtd</th><th>Ações</th></tr></thead><tbody>';
+      lista.forEach(i => {
+        const baixo = (Number(i.quantidade) || 0) <= 5;
+        html += '<tr>';
+        html += '<td>' + esc(i.nome) + '</td>';
+        html += '<td>' + esc(i.ingrediente_ativo) + '</td>';
+        html += '<td>' + esc(i.numero_registro) + '</td>';
+        html += '<td style="color:' + (baixo ? '#c62828' : '#2e7d32') + ';font-weight:bold;">' + (i.quantidade || 0) + '</td>';
+        html += '<td><button class="btn" style="padding:4px 10px;" onclick="editarInsumo(' + i.id + ')">✏️</button> ';
+        html += '<button class="btn danger" style="padding:4px 10px;" onclick="excluirInsumo(' + i.id + ')">🗑️</button></td>';
+        html += '</tr>';
       });
+      html += '</tbody></table>';
+      cont.innerHTML = html;
     }
 
-    async function atualizarQuantidade(id, qtdAtual, delta) {
-      const novaQtd = Math.max(0, qtdAtual + delta);
+    async function salvarInsumo() {
+      const nome = document.getElementById('fNome').value.trim();
+      const ingrediente = document.getElementById('fIngrediente').value.trim();
+      const registro = document.getElementById('fRegistro').value.trim();
+      const quantidade = parseInt(document.getElementById('fQuantidade').value, 10);
+
+      if (!nome) { setMsg('formMsg', 'O campo Nome é obrigatório.', 'error'); return; }
+      if (isNaN(quantidade)) { setMsg('formMsg', 'Informe uma quantidade válida.', 'error'); return; }
+
+      const payload = {
+        nome: nome,
+        ingrediente_ativo: ingrediente,
+        numero_registro: registro,
+        quantidade: quantidade
+      };
+
       try {
-        const { error } = await supabaseClient.from('insumos').update({ quantidade: novaQtd }).eq('id', id);
-        if (error) throw error;
-        await carregarEstoque();
-      } catch (err) {
-        alert('Erro ao atualizar: ' + err.message);
+        const editId = document.getElementById('fNome').dataset.editId;
+        if (editId) {
+          const { error } = await supabase.from('insumos').update(payload).eq('id', editId);
+          if (error) throw error;
+          setMsg('formMsg', 'Insumo atualizado com sucesso!', 'success');
+        } else {
+          const { error } = await supabase.from('insumos').insert([payload]);
+          if (error) throw error;
+          setMsg('formMsg', 'Insumo cadastrado com sucesso!', 'success');
+        }
+        limparForm();
+        carregarEstoque();
+        carregarDashboard();
+      } catch (e) {
+        setMsg('formMsg', 'Erro ao salvar: ' + esc(e.message), 'error');
       }
     }
 
-    async function removerInsumo(id) {
-      if (!confirm('Remover este insumo do estoque?')) return;
+    function editarInsumo(id) {
+      const item = insumosCache.find(i => i.id === id);
+      if (!item) return;
+      showSection('estoque', document.querySelectorAll('nav button')[2]);
+      document.getElementById('fNome').value = item.nome || '';
+      document.getElementById('fNome').dataset.editId = id;
+      document.getElementById('fIngrediente').value = item.ingrediente_ativo || '';
+      document.getElementById('fRegistro').value = item.numero_registro || '';
+      document.getElementById('fQuantidade').value = item.quantidade || 0;
+      setMsg('formMsg', 'Editando insumo. Altere os campos e clique em Salvar.', 'info');
+    }
+
+    async function excluirInsumo(id) {
+      if (!confirm('Tem certeza que deseja excluir este insumo?')) return;
       try {
-        const { error } = await supabaseClient.from('insumos').delete().eq('id', id);
+        const { error } = await supabase.from('insumos').delete().eq('id', id);
         if (error) throw error;
-        await carregarEstoque();
-      } catch (err) {
-        alert('Erro ao remover: ' + err.message);
+        setMsg('formMsg', 'Insumo excluído com sucesso!', 'success');
+        carregarEstoque();
+        carregarDashboard();
+      } catch (e) {
+        setMsg('formMsg', 'Erro ao excluir: ' + esc(e.message), 'error');
       }
     }
 
-    // ===== HELPERS HTML =====
-    function escapeHtml(str) {
-      return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-    function escapeAttr(str) {
-      return String(str || '').replace(/'/g, "\\'").replace(/\\/g, "\\\\");
+    function limparForm() {
+      document.getElementById('fNome').value = '';
+      document.getElementById('fNome').dataset.editId = '';
+      document.getElementById('fIngrediente').value = '';
+      document.getElementById('fRegistro').value = '';
+      document.getElementById('fQuantidade').value = '';
     }
 
-    // ===== INIT =====
-    window.addEventListener('DOMContentLoaded', () => {
-      carregarEstoque();
-    });
+    // ===== Utilidades =====
+    function esc(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function escAttr(s) {
+      return esc(s).replace(/'/g, '&#39;');
+    }
+
+    // ===== Init =====
+    carregarDashboard();
   </script>
 </body>
 </html>
