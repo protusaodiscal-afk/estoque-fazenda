@@ -1,523 +1,794 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nelcir - Gestão de Insumos Agrícolas</title>
-<style>
-  :root {
-    --verde-fazenda: #2e7d32;
-    --verde-claro: #4caf50;
-    --verde-escuro: #1b5e20;
-    --verde-fundo: #e8f5e9;
-    --texto: #1b3a1d;
-    --branco: #ffffff;
-    --cinza: #f5f5f5;
-    --vermelho: #c62828;
-    --amarelo: #f9a825;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: var(--verde-fundo);
-    color: var(--texto);
-    min-height: 100vh;
-  }
-  header {
-    background: linear-gradient(135deg, var(--verde-escuro), var(--verde-fazenda));
-    color: var(--branco);
-    padding: 18px 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-  header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
-  header h1 span { font-size: 26px; }
-  nav {
-    display: flex;
-    gap: 4px;
-    background: var(--verde-escuro);
-    padding: 0 16px;
-    flex-wrap: wrap;
-  }
-  .tab-btn {
-    background: transparent;
-    color: #c8e6c9;
-    border: none;
-    padding: 14px 22px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-  }
-  .tab-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-  .tab-btn.active {
-    background: var(--verde-fundo);
-    color: var(--verde-escuro);
-    border-bottom-color: var(--verde-claro);
-  }
-  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-  .card {
-    background: var(--branco);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
-  }
-  .card h2 {
-    color: var(--verde-escuro);
-    margin-bottom: 14px;
-    font-size: 18px;
-    border-bottom: 2px solid var(--verde-fundo);
-    padding-bottom: 8px;
-  }
-  .grid-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-  }
-  .stat {
-    background: linear-gradient(135deg, var(--verde-fazenda), var(--verde-claro));
-    color: #fff;
-    padding: 18px;
-    border-radius: 10px;
-    box-shadow: 0 3px 8px rgba(46,125,50,0.3);
-  }
-  .stat .num { font-size: 32px; font-weight: 700; }
-  .stat .label { font-size: 13px; opacity: 0.9; margin-top: 4px; }
-  form .row { margin-bottom: 14px; }
-  label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--verde-escuro); }
-  input, select, textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #c8e6c9;
-    border-radius: 6px;
-    font-size: 14px;
-    background: #fff;
-  }
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--verde-fazenda);
-    box-shadow: 0 0 0 3px rgba(76,175,80,0.2);
-  }
-  button.btn {
-    background: var(--verde-fazenda);
-    color: #fff;
-    border: none;
-    padding: 11px 22px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: background 0.2s;
-  }
-  button.btn:hover { background: var(--verde-escuro); }
-  button.btn:disabled { background: #9e9e9e; cursor: not-allowed; }
-  button.btn.secondary { background: #fff; color: var(--verde-fazenda); border: 1px solid var(--verde-fazenda); }
-  button.btn.secondary:hover { background: var(--verde-fundo); }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
-  th { background: var(--verde-fundo); color: var(--verde-escuro); font-weight: 700; }
-  tr:hover td { background: #f1f8f1; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-  .badge.ok { background: #c8e6c9; color: var(--verde-escuro); }
-  .badge.err { background: #ffcdd2; color: var(--vermelho); }
-  .badge.warn { background: #fff9c4; color: #f57f17; }
-  #logArea {
-    background: #1b1b1b;
-    color: #a5d6a7;
-    padding: 16px;
-    border-radius: 8px;
-    font-family: 'Consolas', monospace;
-    font-size: 13px;
-    height: 420px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-  }
-  .log-line { margin-bottom: 4px; }
-  .log-line.err { color: #ef9a9a; }
-  .log-line.warn { color: #fff59d; }
-  .log-line.info { color: #90caf9; }
-  .empty { text-align: center; color: #777; padding: 30px; font-style: italic; }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--verde-escuro); color: #fff;
-    padding: 14px 20px; border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 9999; opacity: 0; transform: translateY(20px);
-    transition: all 0.3s; max-width: 360px;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.err { background: var(--vermelho); }
-  .spinner {
-    display: inline-block; width: 14px; height: 14px;
-    border: 2px solid #fff; border-top-color: transparent;
-    border-radius: 50%; animation: spin 0.8s linear infinite;
-    vertical-align: middle; margin-right: 6px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nelcir - Gestão de Insumos Agrícolas</title>
+  <style>
+    :root {
+      --verde-fazenda: #2e7d32;
+      --verde-escuro: #1b5e20;
+      --verde-claro: #66bb6a;
+      --verde-bg: #f1f8e9;
+      --cinza-texto: #333333;
+      --cinza-claro: #e0e0e0;
+      --branco: #ffffff;
+      --vermelho: #c62828;
+      --amarelo: #f9a825;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--verde-bg);
+      color: var(--cinza-texto);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--verde-fazenda);
+      color: var(--branco);
+      padding: 18px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    header p {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    nav {
+      background: var(--verde-escuro);
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--branco);
+      padding: 14px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .tab-btn.active {
+      border-bottom-color: var(--verde-claro);
+      background: rgba(255,255,255,0.08);
+    }
+
+    main {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--branco);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      color: var(--verde-escuro);
+      font-size: 18px;
+      margin-bottom: 14px;
+      border-bottom: 2px solid var(--verde-bg);
+      padding-bottom: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .stat {
+      background: linear-gradient(135deg, var(--verde-fazenda), var(--verde-escuro));
+      color: var(--branco);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .stat .label {
+      font-size: 13px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--verde-escuro);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      transition: border 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--verde-fazenda);
+      box-shadow: 0 0 0 3px rgba(46,125,50,0.15);
+    }
+
+    button.btn {
+      background: var(--verde-fazenda);
+      color: var(--branco);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    button.btn:hover {
+      background: var(--verde-escuro);
+    }
+
+    button.btn:disabled {
+      background: var(--cinza-claro);
+      cursor: not-allowed;
+    }
+
+    button.btn-secondary {
+      background: var(--cinza-claro);
+      color: var(--cinza-texto);
+    }
+
+    button.btn-secondary:hover {
+      background: #bdbdbd;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--cinza-claro);
+    }
+
+    th {
+      background: var(--verde-bg);
+      color: var(--verde-escuro);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+    }
+
+    tr:hover {
+      background: var(--verde-bg);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .log-box {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 480px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    .log-line { margin-bottom: 4px; }
+    .log-info { color: #6ab0f3; }
+    .log-success { color: #6bd76b; }
+    .log-warn { color: #f0c674; }
+    .log-error { color: #ef5350; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-ok { background: #e8f5e9; color: var(--verde-escuro); }
+    .badge-err { background: #ffebee; color: var(--vermelho); }
+    .badge-warn { background: #fff8e1; color: var(--amarelo); }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+      font-style: italic;
+    }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 200px; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--verde-escuro);
+      color: var(--branco);
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      z-index: 9999;
+      max-width: 360px;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--vermelho); }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: var(--branco);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
 
-<header>
-  <h1><span>🌾</span> Nelcir - Gestão de Insumos Agrícolas</h1>
-</header>
+  <header>
+    <h1>🌱 Nelcir - Gestão de Insumos Agrícolas</h1>
+    <p>Importação e organização de produtos registrados na Embrapa</p>
+  </header>
 
-<nav>
-  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-  <button class="tab-btn" data-tab="importar">Importar</button>
-  <button class="tab-btn" data-tab="salvos">Salvos</button>
-  <button class="tab-btn" data-tab="log">Log</button>
-</nav>
+  <nav>
+    <button class="tab-btn active" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" data-tab="importar" onclick="showTab('importar')">Importar</button>
+    <button class="tab-btn" data-tab="salvos" onclick="showTab('salvos')">Salvos</button>
+    <button class="tab-btn" data-tab="log" onclick="showTab('log')">Log</button>
+  </nav>
 
-<main>
+  <main>
 
-  <!-- ABA 1: DASHBOARD -->
-  <section id="dashboard" class="tab-panel active">
-    <div class="card">
-      <h2>Visão Geral</h2>
-      <div class="grid-stats">
-        <div class="stat">
-          <div class="num" id="statTotal">0</div>
-          <div class="label">Insumos Salvos</div>
-        </div>
-        <div class="stat">
-          <div class="num" id="statBuscas">0</div>
-          <div class="label">Buscas Realizadas</div>
-        </div>
-        <div class="stat">
-          <div class="num" id="statErros">0</div>
-          <div class="label">Erros de Rede</div>
-        </div>
-        <div class="stat">
-          <div class="num" id="statImport">0</div>
-          <div class="label">Importações Hoje</div>
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="card">
+        <h2>Visão Geral</h2>
+        <div class="grid">
+          <div class="stat">
+            <div class="label">Insumos Salvos</div>
+            <div class="value" id="stat-salvos">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Importações Realizadas</div>
+            <div class="value" id="stat-importacoes">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Última Atualização</div>
+            <div class="value" id="stat-atualizacao" style="font-size:16px;">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Status Sistema</div>
+            <div class="value" id="stat-status" style="font-size:16px;">Online</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <h2>Resumo de Atividade</h2>
-      <p id="resumoAtiv">Nenhuma atividade registrada nesta sessão.</p>
-    </div>
-  </section>
 
-  <!-- ABA 2: IMPORTAR -->
-  <section id="importar" class="tab-panel">
-    <div class="card">
-      <h2>Buscar Insumo na Embrapa</h2>
-      <form id="formBusca" autocomplete="off">
+      <div class="card">
+        <h2>Últimos Insumos Salvos</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Ingrediente Ativo</th>
+                <th>Nº Registro</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-list">
+              <tr><td colspan="3" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- IMPORTAR -->
+    <section id="tab-importar" class="tab-content">
+      <div class="card">
+        <h2>Importar da Embrapa</h2>
+        <p style="margin-bottom:14px; color:#555; font-size:14px;">
+          Consulte produtos agrícolas registrados na Embrapa e salve no banco de dados.
+        </p>
+
         <div class="row">
-          <label for="buscaTermo">Termo de busca (nome do produto ou registro)</label>
-          <input type="text" id="buscaTermo" placeholder="Ex: glifosato, 0000-00" required>
+          <div>
+            <label for="filtro-nome">Nome do Produto</label>
+            <input type="text" id="filtro-nome" placeholder="Ex: Glifosato" />
+          </div>
+          <div>
+            <label for="filtro-registro">Número de Registro</label>
+            <input type="text" id="filtro-registro" placeholder="Ex: 00089" />
+          </div>
         </div>
-        <div class="actions">
-          <button type="submit" class="btn" id="btnBuscar">Buscar na Embrapa</button>
-          <button type="button" class="btn secondary" id="btnLimpar">Limpar</button>
+
+        <div class="row">
+          <div>
+            <label for="filtro-tipo">Tipo de Produto</label>
+            <select id="filtro-tipo">
+              <option value="agrotoxicos">Agrotóxicos</option>
+              <option value="bioinsumos">Bioinsumos</option>
+            </select>
+          </div>
+          <div>
+            <label for="filtro-limite">Limite de Resultados</label>
+            <select id="filtro-limite">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
         </div>
-      </form>
-    </div>
 
-    <div class="card">
-      <h2>Resultados</h2>
-      <div id="resultadosBusca">
-        <p class="empty">Nenhuma busca realizada ainda.</p>
+        <button class="btn" id="btn-buscar" onclick="buscarEmbrapa()">🔍 Buscar na Embrapa</button>
       </div>
-    </div>
-  </section>
 
-  <!-- ABA 3: SALVOS -->
-  <section id="salvos" class="tab-panel">
-    <div class="card">
-      <h2>Insumos Salvos no Supabase</h2>
-      <div class="actions" style="margin-bottom:12px;">
-        <button class="btn" id="btnCarregarSalvos">Recarregar Lista</button>
+      <div class="card">
+        <h2>Resultados da Busca</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Ingrediente Ativo</th>
+                <th>Nº Registro</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="resultados-list">
+              <tr><td colspan="4" class="empty">Nenhuma busca realizada ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div id="listaSalvos">
-        <p class="empty">Clique em "Recarregar Lista" para visualizar os insumos salvos.</p>
+    </section>
+
+    <!-- SALVOS -->
+    <section id="tab-salvos" class="tab-content">
+      <div class="card">
+        <h2>Insumos Salvos no Banco</h2>
+        <div class="row" style="margin-bottom:14px;">
+          <input type="text" id="busca-salvos" placeholder="Buscar por nome ou registro..." oninput="filtrarSalvos()" />
+          <button class="btn-secondary btn" onclick="carregarSalvos()">🔄 Atualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Ingrediente Ativo</th>
+                <th>Nº Registro</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="salvos-list">
+              <tr><td colspan="4" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ABA 4: LOG -->
-  <section id="log" class="tab-panel">
-    <div class="card">
-      <h2>Log do Sistema</h2>
-      <div class="actions" style="margin-bottom:12px;">
-        <button class="btn secondary" id="btnLimparLog">Limpar Log</button>
+    <!-- LOG -->
+    <section id="tab-log" class="tab-content">
+      <div class="card">
+        <h2>Log do Sistema</h2>
+        <div class="row" style="margin-bottom:14px;">
+          <button class="btn-secondary btn" onclick="limparLog()">🗑️ Limpar Log</button>
+        </div>
+        <div class="log-box" id="log-box">
+          <div class="log-line log-info">[Sistema] Inicializando Nelcir...</div>
+        </div>
       </div>
-      <div id="logArea"></div>
-    </div>
-  </section>
+    </section>
 
-</main>
+  </main>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
-<script>
-// ===== CONFIGURAÇÕES FIXAS =====
-const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
-const EMBRAPA_TOKEN = '9c9499c1-7595-3271-a8f1-3f4c4cb4aee8';
-const CORS_PROXY = 'https://corsproxy.io/?';
-const EMBRAPA_ENDPOINT = 'https://www.agroapi.cnptia.embrapa.br/agroapi/1/registro';
-const SUPABASE_TABLE = 'insumos';
+  <script>
+    // ============================================================
+    // 1) NAVEGAÇÃO - No topo, sem dependências, nunca congela
+    // ============================================================
+    function showTab(tabName) {
+      try {
+        var contents = document.querySelectorAll('.tab-content');
+        for (var i = 0; i < contents.length; i++) {
+          contents[i].classList.remove('active');
+        }
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var j = 0; j < btns.length; j++) {
+          btns[j].classList.remove('active');
+        }
 
-// ===== ESTADO DA SESSÃO =====
-const state = {
-  buscas: 0,
-  erros: 0,
-  importHoje: 0,
-  resultados: []
-};
+        var target = document.getElementById('tab-' + tabName);
+        if (target) {
+          target.classList.add('active');
+        }
 
-// ===== NAVEGAÇÃO POR ABAS (IDs DIRETOS - NUNCA CONGELA) =====
-const tabButtons = document.querySelectorAll('.tab-btn');
-const tabPanels = document.querySelectorAll('.tab-panel');
+        var activeBtn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+        if (activeBtn) {
+          activeBtn.classList.add('active');
+        }
 
-tabButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const targetId = btn.getAttribute('data-tab');
-    // Remove active de todos os botões
-    tabButtons.forEach(b => b.classList.remove('active'));
-    // Remove active de todos os painéis
-    tabPanels.forEach(p => p.classList.remove('active'));
-    // Ativa o botão clicado
-    btn.classList.add('active');
-    // Ativa o painel correspondente pelo ID direto
-    const panel = document.getElementById(targetId);
-    if (panel) panel.classList.add('active');
-    // Ações específicas por aba
-    if (targetId === 'salvos') carregarSalvos();
-    if (targetId === 'dashboard') atualizarDashboard();
-  });
-});
-
-// ===== LOG DO SISTEMA =====
-function logMsg(msg, tipo = 'info') {
-  const area = document.getElementById('logArea');
-  const linha = document.createElement('div');
-  linha.className = 'log-line ' + tipo;
-  const ts = new Date().toLocaleTimeString('pt-BR');
-  linha.textContent = '[' + ts + '] ' + msg;
-  area.appendChild(linha);
-  area.scrollTop = area.scrollHeight;
-}
-
-document.getElementById('btnLimparLog').addEventListener('click', () => {
-  document.getElementById('logArea').innerHTML = '';
-  logMsg('Log limpo pelo usuário.', 'warn');
-});
-
-// ===== TOAST =====
-function toast(msg, tipo = 'ok') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (tipo === 'err' ? ' err' : '');
-  setTimeout(() => { t.className = 'toast'; }, 3500);
-}
-
-// ===== DASHBOARD =====
-function atualizarDashboard() {
-  document.getElementById('statTotal').textContent = state.totalSalvos || 0;
-  document.getElementById('statBuscas').textContent = state.buscas;
-  document.getElementById('statErros').textContent = state.erros;
-  document.getElementById('statImport').textContent = state.importHoje;
-  const resumo = document.getElementById('resumoAtiv');
-  if (state.buscas === 0 && state.erros === 0) {
-    resumo.textContent = 'Nenhuma atividade registrada nesta sessão.';
-  } else {
-    resumo.textContent = 'Buscas: ' + state.buscas + ' | Erros de rede: ' + state.erros + ' | Importações hoje: ' + state.importHoje + '.';
-  }
-}
-
-// ===== BUSCA NA EMBRAPA =====
-const formBusca = document.getElementById('formBusca');
-const btnBuscar = document.getElementById('btnBuscar');
-
-formBusca.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const termo = document.getElementById('buscaTermo').value.trim();
-  if (!termo) {
-    toast('Digite um termo para buscar.', 'err');
-    return;
-  }
-
-  // Trava o botão para evitar duplo clique
-  btnBuscar.disabled = true;
-  const originalText = btnBuscar.innerHTML;
-  btnBuscar.innerHTML = '<span class="spinner"></span>Buscando...';
-  logMsg('Iniciando busca na Embrapa: "' + termo + '"');
-
-  try {
-    state.buscas++;
-    const urlAlvo = EMBRAPA_ENDPOINT + '?termo=' + encodeURIComponent(termo);
-    const urlComProxy = CORS_PROXY + encodeURIComponent(urlAlvo);
-
-    logMsg('Requisição via proxy: ' + urlComProxy);
-
-    const resp = await fetch(urlComProxy, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + EMBRAPA_TOKEN,
-        'Accept': 'application/json'
+        // Carrega dados sob demanda
+        if (tabName === 'dashboard') { carregarDashboard(); }
+        if (tabName === 'salvos') { carregarSalvos(); }
+      } catch (e) {
+        console.error('Erro na navegação:', e);
       }
-    });
-
-    if (!resp.ok) {
-      throw new Error('HTTP ' + resp.status + ' - ' + resp.statusText);
     }
 
-    const data = await resp.json();
-    logMsg('Resposta recebida com sucesso da Embrapa.', 'info');
-    state.resultados = Array.isArray(data) ? data : (data.dados || data.resultados || [data]);
-    renderResultados(state.resultados);
-    toast('Busca concluída: ' + state.resultados.length + ' resultado(s).');
-    atualizarDashboard();
+    // ============================================================
+    // 2) CONFIGURAÇÕES FIXAS
+    // ============================================================
+    const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+    const EMBRAPA_TOKEN = '9c9499c1-7595-3271-a8f1-3f4c4cb4aee8';
+    const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+    const EMBRAPA_BASE = 'https://www.agroapi.cnptia.embrapa.br/agroapi/1';
+    const TABELA = 'insumos';
 
-  } catch (err) {
-    state.erros++;
-    logMsg('ERRO de rede na busca Embrapa: ' + err.message, 'err');
-    toast('Erro de rede ao buscar. Verifique o log.', 'err');
-    document.getElementById('resultadosBusca').innerHTML =
-      '<p class="empty">Falha na busca. Verifique o log para detalhes.</p>';
-    atualizarDashboard();
-  } finally {
-    // GARANTE que o botão seja liberado mesmo em caso de erro
-    btnBuscar.disabled = false;
-    btnBuscar.innerHTML = originalText;
-    logMsg('Botão de busca liberado (finally).', 'info');
-  }
-});
+    let todosSalvos = [];
+    let contadorImportacoes = 0;
 
-document.getElementById('btnLimpar').addEventListener('click', () => {
-  document.getElementById('buscaTermo').value = '';
-  document.getElementById('resultadosBusca').innerHTML =
-    '<p class="empty">Nenhuma busca realizada ainda.</p>';
-  state.resultados = [];
-});
+    // ============================================================
+    // 3) LOG DO SISTEMA
+    // ============================================================
+    function log(msg, tipo) {
+      tipo = tipo || 'info';
+      var box = document.getElementById('log-box');
+      if (!box) return;
+      var hora = new Date().toLocaleTimeString('pt-BR');
+      var div = document.createElement('div');
+      div.className = 'log-line log-' + tipo;
+      div.textContent = '[' + hora + '] ' + msg;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      console.log('[' + tipo + ']', msg);
+    }
 
-function renderResultados(lista) {
-  const cont = document.getElementById('resultadosBusca');
-  if (!lista || lista.length === 0) {
-    cont.innerHTML = '<p class="empty">Nenhum resultado encontrado.</p>';
-    return;
-  }
-  let html = '<table><thead><tr>' +
-    '<th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th><th>Ação</th>' +
-    '</tr></thead><tbody>';
-  lista.forEach((item, idx) => {
-    const nome = escapeHtml(item.nome || item.produto || '-');
-    const ing = escapeHtml(item.ingrediente_ativo || item.ingrediente || '-');
-    const reg = escapeHtml(item.numero_registro || item.registro || '-');
-    html += '<tr>' +
-      '<td>' + nome + '</td>' +
-      '<td>' + ing + '</td>' +
-      '<td>' + reg + '</td>' +
-      '<td><button class="btn" onclick="salvarInsumo(' + idx + ')">Salvar</button></td>' +
-      '</tr>';
-  });
-  html += '</tbody></table>';
-  cont.innerHTML = html;
-}
+    function limparLog() {
+      document.getElementById('log-box').innerHTML =
+        '<div class="log-line log-info">[Sistema] Log limpo.</div>';
+    }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+    // ============================================================
+    // 4) TOAST
+    // ============================================================
+    function toast(msg, isError) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' error' : '');
+      setTimeout(function () { t.classList.add('show'); }, 10);
+      setTimeout(function () { t.classList.remove('show'); }, 3500);
+    }
 
-// ===== SALVAR NO SUPABASE =====
-window.salvarInsumo = async function(idx) {
-  const item = state.resultados[idx];
-  if (!item) return;
-  const payload = {
-    nome: item.nome || item.produto || null,
-    ingrediente_ativo: item.ingrediente_ativo || item.ingrediente || null,
-    numero_registro: item.numero_registro || item.registro || null
-  };
-  logMsg('Salvando insumo no Supabase: ' + (payload.nome || '(sem nome)'));
-  try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE, {
-      method: 'POST',
-      headers: {
+    // ============================================================
+    // 5) SUPABASE - CRUD na tabela 'insumos'
+    // ============================================================
+    async function supabaseRequest(method, path, body) {
+      const url = SUPABASE_URL + '/rest/v1/' + path;
+      const headers = {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(payload)
-    });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error('HTTP ' + resp.status + ' - ' + txt);
-    }
-    state.importHoje++;
-    logMsg('Insumo salvo com sucesso no Supabase.', 'info');
-    toast('Insumo salvo com sucesso!');
-    atualizarDashboard();
-  } catch (err) {
-    logMsg('ERRO ao salvar no Supabase: ' + err.message, 'err');
-    toast('Erro ao salvar insumo.', 'err');
-  }
-};
+        'Prefer': method === 'POST' ? 'return=representation' : 'count=exact'
+      };
 
-// ===== CARREGAR SALVOS DO SUPABASE =====
-async function carregarSalvos() {
-  const cont = document.getElementById('listaSalvos');
-  cont.innerHTML = '<p class="empty"><span class="spinner"></span>Carregando...</p>';
-  logMsg('Carregando insumos salvos do Supabase...');
-  try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?select=nome,ingrediente_ativo,numero_registro&order=nome.asc', {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
+      const opts = { method: method, headers: headers };
+      if (body) { opts.body = JSON.stringify(body); }
+
+      const resp = await fetch(url, opts);
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error('Supabase ' + resp.status + ': ' + txt);
       }
-    });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error('HTTP ' + resp.status + ' - ' + txt);
+      return resp;
     }
-    const dados = await resp.json();
-    state.totalSalvos = dados.length;
-    logMsg('Carregados ' + dados.length + ' insumos do Supabase.', 'info');
-    renderSalvos(dados);
-    atualizarDashboard();
-  } catch (err) {
-    logMsg('ERRO ao carregar salvos: ' + err.message, 'err');
-    cont.innerHTML = '<p class="empty">Erro ao carregar. Verifique o log.</p>';
-    toast('Erro ao carregar salvos.', 'err');
-  }
-}
 
-document.getElementById('btnCarregarSalvos').addEventListener('click', carregarSalvos);
+    async function carregarSalvos() {
+      try {
+        log('Carregando insumos salvos do Supabase...', 'info');
+        const resp = await supabaseRequest('GET', TABELA + '?order=nome.asc&limit=200');
+        const data = await resp.json();
+        todosSalvos = data || [];
+        renderSalvos(todosSalvos);
+        log(todosSalvos.length + ' insumos carregados.', 'success');
+      } catch (e) {
+        log('Erro ao carregar salvos: ' + e.message, 'error');
+        toast('Erro ao carregar salvos', true);
+        document.getElementById('salvos-list').innerHTML =
+          '<tr><td colspan="4" class="empty">Erro ao carregar dados.</td></tr>';
+      }
+    }
 
-function renderSalvos(lista) {
-  const cont = document.getElementById('listaSalvos');
-  if (!lista || lista.length === 0) {
-    cont.innerHTML = '<p class="empty">Nenhum insumo salvo ainda.</p>';
-    return;
-  }
-  let html = '<table><thead><tr>' +
-    '<th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th>' +
-    '</tr></thead><tbody>';
-  lista.forEach(item => {
-    html += '<tr>' +
-      '<td>' + escapeHtml(item.nome || '-') + '</td>' +
-      '<td>' + escapeHtml(item.ingrediente_ativo || '-') + '</td>' +
-      '<td>' + escapeHtml(item.numero_registro || '-') + '</td>' +
-      '</tr>';
-  });
-  html += '</tbody></table>';
-  cont.innerHTML = html;
-}
+    function renderSalvos(lista) {
+      var tbody = document.getElementById('salvos-list');
+      if (!lista || lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhum insumo salvo.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(function (item) {
+        return '<tr>' +
+          '<td>' + esc(item.nome) + '</td>' +
+          '<td>' + esc(item.ingrediente_ativo) + '</td>' +
+          '<td>' + esc(item.numero_registro) + '</td>' +
+          '<td><button class="btn btn-secondary" onclick="excluirInsumo(' + item.id + ')">Excluir</button></td>' +
+          '</tr>';
+      }).join('');
+    }
 
-// ===== INICIALIZAÇÃO =====
-logMsg('Sistema Nelcir iniciado.', 'info');
-logMsg('Proxy CORS: ' + CORS_PROXY, 'info');
-logMsg('Supabase URL: ' + SUPABASE_URL, 'info');
-atualizarDashboard();
-</script>
+    function filtrarSalvos() {
+      var q = (document.getElementById('busca-salvos').value || '').toLowerCase();
+      var filtrados = todosSalvos.filter(function (i) {
+        return (i.nome && i.nome.toLowerCase().indexOf(q) >= 0) ||
+               (i.numero_registro && String(i.numero_registro).toLowerCase().indexOf(q) >= 0);
+      });
+      renderSalvos(filtrados);
+    }
+
+    async function excluirInsumo(id) {
+      if (!confirm('Excluir este insumo?')) return;
+      try {
+        log('Excluindo insumo id=' + id, 'info');
+        await supabaseRequest('DELETE', TABELA + '?id=eq.' + id);
+        toast('Insumo excluído');
+        log('Insumo excluído.', 'success');
+        carregarSalvos();
+      } catch (e) {
+        log('Erro ao excluir: ' + e.message, 'error');
+        toast('Erro ao excluir', true);
+      }
+    }
+
+    async function salvarInsumo(dados) {
+      const body = {
+        nome: dados.nome || '',
+        ingrediente_ativo: dados.ingrediente_ativo || '',
+        numero_registro: dados.numero_registro || ''
+      };
+      const resp = await supabaseRequest('POST', TABELA, body);
+      return await resp.json();
+    }
+
+    // ============================================================
+    // 6) EMBRAPA - Busca via proxy com Token no Header
+    // ============================================================
+    async function buscarEmbrapa() {
+      var btn = document.getElementById('btn-buscar');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Buscando...';
+
+      var nome = document.getElementById('filtro-nome').value.trim();
+      var registro = document.getElementById('filtro-registro').value.trim();
+      var tipo = document.getElementById('filtro-tipo').value;
+      var limite = document.getElementById('filtro-limite').value;
+
+      if (!nome && !registro) {
+        toast('Informe um nome ou número de registro', true);
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Buscar na Embrapa';
+        return;
+      }
+
+      try {
+        log('Iniciando busca Embrapa: nome="' + nome + '" registro="' + registro + '" tipo=' + tipo, 'info');
+
+        var params = new URLSearchParams();
+        if (nome) params.append('nome', nome);
+        if (registro) params.append('registro', registro);
+        params.append('limite', limite);
+
+        var endpoint = EMBRAPA_BASE + '/' + tipo + '/consultar?' + params.toString();
+        var urlFinal = PROXY_URL + encodeURIComponent(endpoint);
+
+        log('Endpoint Embrapa: ' + endpoint, 'info');
+        log('Usando proxy allorigins...', 'info');
+
+        var resp = await fetch(urlFinal, {
+          method: 'GET',
+          headers: {
+            'X-Embrapa-Token': EMBRAPA_TOKEN,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!resp.ok) {
+          throw new Error('HTTP ' + resp.status + ' na resposta do proxy');
+        }
+
+        var data = await resp.json();
+        var lista = extrairLista(data);
+
+        log('Busca retornou ' + lista.length + ' resultado(s).', 'success');
+        renderResultados(lista);
+        contadorImportacoes++;
+        toast(lista.length + ' resultado(s) encontrado(s)');
+      } catch (e) {
+        log('Erro na busca Embrapa: ' + e.message, 'error');
+        toast('Erro na busca: ' + e.message, true);
+        document.getElementById('resultados-list').innerHTML =
+          '<tr><td colspan="4" class="empty">Erro na busca. Verifique o Log.</td></tr>';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Buscar na Embrapa';
+      }
+    }
+
+    function extrairLista(data) {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.dados)) return data.dados;
+      if (Array.isArray(data.data)) return data.data;
+      if (Array.isArray(data.resultados)) return data.resultados;
+      if (Array.isArray(data.produtos)) return data.produtos;
+      if (data.result && Array.isArray(data.result)) return data.result;
+      return [];
+    }
+
+    function renderResultados(lista) {
+      var tbody = document.getElementById('resultados-list');
+      if (!lista || lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhum resultado encontrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(function (item, idx) {
+        var nome = item.nome || item.nomeProduto || item.nome_produto || '';
+        var ing = item.ingredienteAtivo || item.ingrediente_ativo || item.ingrediente || '';
+        var reg = item.numeroRegistro || item.numero_registro || item.registro || item.nu_registro || '';
+        var dados = JSON.stringify({ nome: nome, ingrediente_ativo: ing, numero_registro: String(reg) })
+          .replace(/'/g, "&#39;");
+        return '<tr>' +
+          '<td>' + esc(nome) + '</td>' +
+          '<td>' + esc(ing) + '</td>' +
+          '<td>' + esc(String(reg)) + '</td>' +
+          '<td><button class="btn" onclick=\'salvarResultado(' + dados + ')\'>💾 Salvar</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    async function salvarResultado(dados) {
+      try {
+        log('Salvando insumo: ' + dados.nome, 'info');
+        await salvarInsumo(dados);
+        log('Insumo salvo com sucesso: ' + dados.nome, 'success');
+        toast('Insumo salvo: ' + dados.nome);
+        carregarDashboard();
+      } catch (e) {
+        log('Erro ao salvar: ' + e.message, 'error');
+        toast('Erro ao salvar: ' + e.message, true);
+      }
+    }
+
+    // ============================================================
+    // 7) DASHBOARD
+    // ============================================================
+    async function carregarDashboard() {
+      try {
+        const resp = await supabaseRequest('GET', TABELA + '?order=nome.asc&limit=5');
+        const data = await resp.json();
+        todosSalvos = data || [];
+
+        document.getElementById('stat-salvos').textContent = data.length;
+        document.getElementById('stat-importacoes').textContent = contadorImportacoes;
+        document.getElementById('stat-atualizacao').textContent =
+          new Date().toLocaleString('pt-BR');
+
+        var tbody = document.getElementById('dashboard-list');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty">Nenhum insumo salvo ainda.</td></tr>';
+        } else {
+          tbody.innerHTML = data.map(function (item) {
+            return '<tr>' +
+              '<td>' + esc(item.nome) + '</td>' +
+              '<td>' + esc(item.ingrediente_ativo) + '</td>' +
+              '<td>' + esc(item.numero_registro) + '</td>' +
+              '</tr>';
+          }).join('');
+        }
+      } catch (e) {
+        log('Erro ao carregar dashboard: ' + e.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // 8) UTILITÁRIOS
+    // ============================================================
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ============================================================
+    // 9) INICIALIZAÇÃO
+    // ============================================================
+    (function init() {
+      log('Nelcir iniciado com sucesso.', 'success');
+      log('Proxy: api.allorigins.win | Tabela: insumos', 'info');
+      carregarDashboard();
+    })();
+  </script>
 </body>
 </html>
