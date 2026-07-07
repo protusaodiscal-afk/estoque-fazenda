@@ -4,443 +4,314 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nelcir - Gestão de Insumos</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
-    header {
-      background: #1e3a5f;
-      color: #fff;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; color: #222; }
+    header { background: #1b5e20; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
     header h1 { font-size: 20px; }
-    nav {
-      background: #2c5282;
-      display: flex;
-      flex-wrap: wrap;
-    }
-    nav button {
-      flex: 1 1 auto;
-      min-width: 120px;
-      padding: 14px;
-      border: none;
-      background: transparent;
-      color: #cbd5e0;
-      font-size: 15px;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s ease;
-    }
-    nav button:hover { background: rgba(255,255,255,0.08); color: #fff; }
-    nav button.active {
-      background: #f4f6f8;
-      color: #1e3a5f;
-      border-bottom: 3px solid #1e3a5f;
-      font-weight: 600;
-    }
-    main { padding: 20px; max-width: 1100px; margin: 0 auto; }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 18px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 18px;
-    }
-    .card h2 { margin-bottom: 12px; color: #1e3a5f; font-size: 18px; }
-    label { display: block; font-weight: 600; margin: 10px 0 4px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button.btn {
-      background: #2c5282;
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 12px;
-    }
-    button.btn:hover { background: #1e3a5f; }
-    button.btn:disabled { background: #a0aec0; cursor: not-allowed; }
+    nav { display: flex; gap: 8px; background: #fff; border-bottom: 1px solid #ddd; padding: 8px 16px; position: sticky; top: 0; z-index: 10; }
+    .tab-btn { padding: 10px 16px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: #555; border-bottom: 2px solid transparent; }
+    .tab-btn.active { color: #1b5e20; border-bottom-color: #1b5e20; font-weight: 600; }
+    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 16px; }
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    input, select, button { padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+    input[type="text"] { flex: 1; min-width: 220px; }
+    button.primary { background: #1b5e20; color: #fff; border: none; cursor: pointer; }
+    button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    button.secondary { background: #eee; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 14px; }
-    th { background: #edf2f7; color: #1e3a5f; }
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
-    .stat {
-      background: #edf2f7;
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
-    }
-    .stat .num { font-size: 26px; font-weight: 700; color: #1e3a5f; }
-    .stat .lbl { font-size: 13px; color: #4a5568; margin-top: 4px; }
-    .log-line {
-      font-family: monospace;
-      font-size: 13px;
-      padding: 4px 6px;
-      border-bottom: 1px dashed #e2e8f0;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .log-line.error { color: #c53030; }
-    .log-line.ok { color: #2f855a; }
-    .log-line.info { color: #2b6cb0; }
-    .status { margin-top: 10px; font-size: 14px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .row > * { flex: 1 1 200px; }
-    .muted { color: #718096; font-size: 13px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f9f9f9; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; background: #e3f2fd; color: #1565c0; }
+    .badge.ok { background: #e8f5e9; color: #2e7d32; }
+    .badge.err { background: #ffebee; color: #c62828; }
+    .log-line { font-family: monospace; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed #eee; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .stat { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stat .num { font-size: 26px; font-weight: 700; color: #1b5e20; }
+    .stat .label { font-size: 12px; color: #777; }
+    .msg { padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+    .msg.info { background: #e3f2fd; color: #1565c0; }
+    .msg.success { background: #e8f5e9; color: #2e7d32; }
+    .msg.error { background: #ffebee; color: #c62828; }
   </style>
 </head>
 <body>
   <header>
     <h1>Nelcir - Gestão de Insumos</h1>
-    <span class="muted" style="color:#cbd5e0">v1.0</span>
+    <span class="badge ok">Conectado</span>
   </header>
 
   <nav>
-    <button type="button" id="tab-dashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
-    <button type="button" id="tab-importar" onclick="showTab('importar')">Importar</button>
-    <button type="button" id="tab-salvos" onclick="showTab('salvos')">Salvos</button>
-    <button type="button" id="tab-log" onclick="showTab('log')">Log</button>
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="importar">Importar</button>
+    <button class="tab-btn" data-tab="salvos">Salvos</button>
+    <button class="tab-btn" data-tab="log">Log</button>
   </nav>
 
   <main>
     <!-- DASHBOARD -->
-    <section id="panel-dashboard" class="tab-panel active">
+    <section id="dashboard" class="tab-content active">
       <div class="card">
         <h2>Dashboard</h2>
-        <div class="stat-grid">
-          <div class="stat"><div class="num" id="stat-total">0</div><div class="lbl">Insumos Salvos</div></div>
-          <div class="stat"><div class="num" id="stat-importados">0</div><div class="lbl">Importados na Sessão</div></div>
-          <div class="stat"><div class="num" id="stat-erros">0</div><div class="lbl">Erros na Sessão</div></div>
+        <p style="margin: 8px 0 16px; color:#666;">Visão geral dos insumos cadastrados.</p>
+        <div class="stats">
+          <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Total de Insumos</div></div>
+          <div class="stat"><div class="num" id="statImportados">0</div><div class="label">Importados Hoje</div></div>
+          <div class="stat"><div class="num" id="statErros">0</div><div class="label">Erros de Importação</div></div>
         </div>
-      </div>
-      <div class="card">
-        <h2>Resumo</h2>
-        <p class="muted">Use a aba <strong>Importar</strong> para buscar produtos na Embrapa e salvar no Supabase.</p>
       </div>
     </section>
 
     <!-- IMPORTAR -->
-    <section id="panel-importar" class="tab-panel">
+    <section id="importar" class="tab-content">
       <div class="card">
         <h2>Importar da Embrapa</h2>
-        <label for="busca">Marca Comercial</label>
-        <input type="text" id="busca" placeholder="Ex.: Roundup" />
-        <button class="btn" id="btn-buscar" onclick="buscarEmbrapa()">Buscar</button>
-        <div class="status" id="importar-status"></div>
-      </div>
-      <div class="card">
-        <h2>Resultados</h2>
-        <table>
+        <div class="form-row">
+          <input type="text" id="buscaInput" placeholder="Digite o nome do produto (marca comercial)..." />
+          <button class="primary" id="btnBuscar">Buscar</button>
+        </div>
+        <div id="buscaMsg"></div>
+        <table id="resultTable">
           <thead>
-            <tr><th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th><th>Ação</th></tr>
+            <tr><th>Marca Comercial</th><th>Registro</th><th>Tipo</th><th>Ação</th></tr>
           </thead>
-          <tbody id="resultados-body">
-            <tr><td colspan="4" class="muted">Nenhuma busca realizada.</td></tr>
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </section>
 
     <!-- SALVOS -->
-    <section id="panel-salvos" class="tab-panel">
+    <section id="salvos" class="tab-content">
       <div class="card">
         <h2>Insumos Salvos</h2>
-        <button class="btn" onclick="carregarSalvos()">Atualizar Lista</button>
-        <table>
+        <button class="secondary" id="btnCarregarSalvos">Recarregar</button>
+        <table id="salvosTable">
           <thead>
-            <tr><th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th></tr>
+            <tr><th>Marca Comercial</th><th>Registro</th><th>Tipo</th><th>Salvo em</th></tr>
           </thead>
-          <tbody id="salvos-body">
-            <tr><td colspan="3" class="muted">Clique em "Atualizar Lista".</td></tr>
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </section>
 
     <!-- LOG -->
-    <section id="panel-log" class="tab-panel">
+    <section id="log" class="tab-content">
       <div class="card">
-        <h2>Log do Sistema</h2>
-        <button class="btn" onclick="limparLog()">Limpar Log</button>
-        <div id="log-box" style="margin-top:12px;max-height:420px;overflow:auto;border:1px solid #e2e8f0;border-radius:6px;padding:6px;"></div>
+        <h2>Log de Operações</h2>
+        <button class="secondary" id="btnLimparLog">Limpar Log</button>
+        <div id="logBox" style="margin-top:12px;"></div>
       </div>
     </section>
   </main>
 
   <script>
-    // ===== CONFIG FIXA =====
+    // ===== CONFIGURAÇÕES =====
     const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
     const EMBRAPA_TOKEN = '9c9499c1-7595-3271-a8f1-3f4c4cb4aee8';
-    const EMBRAPA_BASE = 'https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados';
-    const CORS_PROXY = 'https://corsproxy.io/?';
+    const PROXY = 'https://api.allorigins.win/raw?url=';
+    const EMBRAPA_BASE = 'https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados?marcaComercial=';
+
+    // ===== SUPABASE OFICIAL =====
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ===== ESTADO =====
-    let sessionImportados = 0;
-    let sessionErros = 0;
-
-    // ===== NAVEGAÇÃO (funções simples e independentes) =====
-    const TAB_IDS = ['dashboard', 'importar', 'salvos', 'log'];
-
-    function showTab(nome) {
-      try {
-        if (!TAB_IDS.includes(nome)) {
-          nome = 'dashboard';
-        }
-        // Esconde todos os painéis
-        for (let i = 0; i < TAB_IDS.length; i++) {
-          const panel = document.getElementById('panel-' + TAB_IDS[i]);
-          if (panel) { panel.classList.remove('active'); }
-          const btn = document.getElementById('tab-' + TAB_IDS[i]);
-          if (btn) { btn.classList.remove('active'); }
-        }
-        // Ativa o painel selecionado
-        const panelAtivo = document.getElementById('panel-' + nome);
-        const btnAtivo = document.getElementById('tab-' + nome);
-        if (panelAtivo) { panelAtivo.classList.add('active'); }
-        if (btnAtivo) { btnAtivo.classList.add('active'); }
-
-        // Ações opcionais ao abrir aba
-        if (nome === 'salvos') { carregarSalvos(); }
-        if (nome === 'dashboard') { atualizarStats(); }
-      } catch (e) {
-        registrarLog('error', 'Erro ao trocar aba: ' + e.message);
-      }
-    }
+    let buscando = false;
+    let stats = { total: 0, importados: 0, erros: 0 };
 
     // ===== LOG =====
-    function registrarLog(tipo, msg) {
-      try {
-        const box = document.getElementById('log-box');
-        if (!box) return;
-        const div = document.createElement('div');
-        div.className = 'log-line ' + (tipo || 'info');
-        const ts = new Date().toLocaleTimeString('pt-BR');
-        div.textContent = '[' + ts + '] ' + msg;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-        if (tipo === 'error') { sessionErros++; atualizarStats(); }
-      } catch (e) {
-        console.error('Falha ao registrar log:', e);
-      }
+    function log(msg, tipo = 'info') {
+      const box = document.getElementById('logBox');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      const hora = new Date().toLocaleTimeString('pt-BR');
+      line.innerHTML = `<span class="badge ${tipo === 'error' ? 'err' : 'ok'}">[${hora}]</span> ${msg}`;
+      box.prepend(line);
     }
 
-    function limparLog() {
-      const box = document.getElementById('log-box');
-      if (box) box.innerHTML = '';
-    }
-
-    // ===== STATS =====
-    function atualizarStats() {
-      const elTotal = document.getElementById('stat-total');
-      const elImp = document.getElementById('stat-importados');
-      const elErr = document.getElementById('stat-erros');
-      if (elImp) elImp.textContent = sessionImportados;
-      if (elErr) elErr.textContent = sessionErros;
-      // Total via Supabase count
-      fetch(SUPABASE_URL + '/rest/v1/insumos?select=id', {
-        method: 'GET',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
-        }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (elTotal && Array.isArray(data)) elTotal.textContent = data.length;
-      })
-      .catch(function(err) {
-        registrarLog('error', 'Stats: ' + err.message);
+    // ===== TABS =====
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'salvos') carregarSalvos();
+        if (btn.dataset.tab === 'dashboard') atualizarDashboard();
       });
-    }
+    });
 
-    // ===== EMBRAPA =====
-    function buscarEmbrapa() {
-      const termo = (document.getElementById('busca').value || '').trim();
-      const status = document.getElementById('importar-status');
-      const btn = document.getElementById('btn-buscar');
-      if (!termo) {
-        status.textContent = 'Informe uma marca comercial.';
-        return;
-      }
-      btn.disabled = true;
-      status.textContent = 'Buscando na Embrapa...';
-      registrarLog('info', 'Buscando marcaComercial="' + termo + '"');
-
-      // URL final com proxy + query marcaComercial
-      const urlEmbrapa = EMBRAPA_BASE + '?marcaComercial=' + encodeURIComponent(termo);
-      const urlFinal = CORS_PROXY + encodeURIComponent(urlEmbrapa);
-
-      fetch(urlFinal, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Token': EMBRAPA_TOKEN
-        }
-      })
-      .then(function(resp) {
-        if (!resp.ok) {
-          throw new Error('HTTP ' + resp.status + ' ao consultar Embrapa');
-        }
-        return resp.json();
-      })
-      .then(function(json) {
-        const lista = extrairProdutos(json);
-        renderResultados(lista);
-        status.textContent = lista.length + ' produto(s) encontrado(s).';
-        registrarLog('ok', 'Embrapa retornou ' + lista.length + ' produto(s).');
-      })
-      .catch(function(err) {
-        status.textContent = 'Erro: ' + err.message;
-        registrarLog('error', 'Embrapa: ' + err.message);
-        renderResultados([]);
-      })
-      .finally(function() {
-        btn.disabled = false;
+    // ===== BUSCA EMBRAPA =====
+    async function buscarEmbrapa(termo) {
+      const termoEnc = encodeURIComponent(termo.trim());
+      const urlEmbrapa = EMBRAPA_BASE + termoEnc;
+      const urlFinal = PROXY + encodeURIComponent(urlEmbrapa);
+      log('Buscando: ' + urlEmbrapa);
+      const resp = await fetch(urlFinal, {
+        headers: { 'Accept': 'application/json' }
       });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      return data;
     }
 
-    function extrairProdutos(json) {
-      const out = [];
-      try {
-        let arr = [];
-        if (Array.isArray(json)) arr = json;
-        else if (json && Array.isArray(json.data)) arr = json.data;
-        else if (json && json.data && Array.isArray(json.data.produtosFormulados)) arr = json.data.produtosFormulados;
-        else if (json && Array.isArray(json.produtosFormulados)) arr = json.produtosFormulados;
-        else if (json && json.dados && Array.isArray(json.dados)) arr = json.dados;
-
-        for (let i = 0; i < arr.length; i++) {
-          const p = arr[i] || {};
-          out.push({
-            nome: p.marcaComercial || p.nome || p.nomeComercial || '',
-            ingrediente_ativo: p.ingredienteAtivo || p.ingrediente_ativo || p.ingrediente || '',
-            numero_registro: p.numeroRegistro || p.numero_registro || p.registro || ''
-          });
-        }
-      } catch (e) {
-        registrarLog('error', 'Extrair produtos: ' + e.message);
-      }
-      return out;
-    }
-
+    // ===== RENDER RESULTADOS =====
     function renderResultados(lista) {
-      const tbody = document.getElementById('resultados-body');
+      const tbody = document.querySelector('#resultTable tbody');
       tbody.innerHTML = '';
-      if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="muted">Nenhum resultado.</td></tr>';
+      if (!lista || !lista.length) {
+        tbody.innerHTML = '<tr><td colspan="4">Nenhum produto encontrado.</td></tr>';
         return;
       }
-      for (let i = 0; i < lista.length; i++) {
-        const p = lista[i];
+      lista.forEach(item => {
+        // Mapeamento correto: marcaComercial
+        const marca = item.marcaComercial || item.marca_comercial || 'Sem nome';
+        const registro = item.numeroRegistro || item.registro || '-';
+        const tipo = item.tipoProduto || item.tipo || '-';
         const tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td>' + esc(p.nome) + '</td>' +
-          '<td>' + esc(p.ingrediente_ativo) + '</td>' +
-          '<td>' + esc(p.numero_registro) + '</td>' +
-          '<td><button class="btn" onclick=\'salvarInsumo(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>Salvar</button></td>';
+        tr.innerHTML = `
+          <td>${marca}</td>
+          <td>${registro}</td>
+          <td>${tipo}</td>
+          <td><button class="primary" data-salvar>Salvar</button></td>
+        `;
+        tr.querySelector('[data-salvar]').addEventListener('click', () => salvarInsumo({
+          marca_comercial: marca,
+          registro: registro,
+          tipo: tipo,
+          dados_completos: item
+        }));
         tbody.appendChild(tr);
-      }
-    }
-
-    function esc(s) {
-      return String(s == null ? '' : s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    // ===== SUPABASE - SALVAR =====
-    function salvarInsumo(p) {
-      const payload = {
-        nome: p.nome || '',
-        ingrediente_ativo: p.ingrediente_ativo || '',
-        numero_registro: p.numero_registro || ''
-      };
-      registrarLog('info', 'Salvando insumo: ' + payload.nome);
-      fetch(SUPABASE_URL + '/rest/v1/insumos', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status + ' ao salvar');
-        return r.json();
-      })
-      .then(function() {
-        sessionImportados++;
-        atualizarStats();
-        registrarLog('ok', 'Insumo salvo: ' + payload.nome);
-        alert('Insumo salvo com sucesso!');
-      })
-      .catch(function(err) {
-        registrarLog('error', 'Salvar insumo: ' + err.message);
-        alert('Erro ao salvar: ' + err.message);
       });
     }
 
-    // ===== SUPABASE - CARREGAR =====
-    function carregarSalvos() {
-      const tbody = document.getElementById('salvos-body');
-      tbody.innerHTML = '<tr><td colspan="3" class="muted">Carregando...</td></tr>';
-      fetch(SUPABASE_URL + '/rest/v1/insumos?select=nome,ingrediente_ativo,numero_registro&order=nome.asc', {
-        method: 'GET',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
-        }
-      })
-      .then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function(data) {
+    // ===== BOTÃO BUSCAR (anti-loop) =====
+    const btnBuscar = document.getElementById('btnBuscar');
+    const buscaInput = document.getElementById('buscaInput');
+    const buscaMsg = document.getElementById('buscaMsg');
+
+    async function executarBusca() {
+      if (buscando) return; // evita disparo múltiplo
+      const termo = buscaInput.value.trim();
+      if (!termo) {
+        buscaMsg.innerHTML = '<div class="msg error">Digite um termo para buscar.</div>';
+        return;
+      }
+      buscando = true;
+      btnBuscar.disabled = true;
+      btnBuscar.textContent = 'Buscando...';
+      buscaMsg.innerHTML = '<div class="msg info">Consultando Embrapa...</div>';
+      try {
+        const data = await buscarEmbrapa(termo);
+        const lista = Array.isArray(data) ? data : (data.dados || data.data || data.produtos || []);
+        renderResultados(lista);
+        stats.importados += lista.length;
+        buscaMsg.innerHTML = `<div class="msg success">${lista.length} produto(s) encontrado(s).</div>`;
+        log(`Busca concluída: ${lista.length} resultado(s) para "${termo}".`);
+        atualizarDashboard();
+      } catch (err) {
+        stats.erros++;
+        buscaMsg.innerHTML = `<div class="msg error">Erro: ${err.message}</div>`;
+        log('Erro na busca: ' + err.message, 'error');
+        atualizarDashboard();
+      } finally {
+        buscando = false;
+        btnBuscar.disabled = false;
+        btnBuscar.textContent = 'Buscar';
+      }
+    }
+
+    btnBuscar.addEventListener('click', executarBusca);
+    buscaInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executarBusca();
+      }
+    });
+
+    // ===== SALVAR NO SUPABASE (biblioteca oficial) =====
+    async function salvarInsumo(insumo) {
+      try {
+        const { data, error } = await supabase
+          .from('insumos')
+          .insert([{
+            marca_comercial: insumo.marca_comercial,
+            registro: insumo.registro,
+            tipo: insumo.tipo,
+            dados_completos: insumo.dados_completos
+          }]);
+        if (error) throw error;
+        log(`Insumo salvo: ${insumo.marca_comercial}`);
+        alert('Insumo salvo com sucesso!');
+        atualizarDashboard();
+      } catch (err) {
+        log('Erro ao salvar: ' + err.message, 'error');
+        alert('Erro ao salvar: ' + err.message);
+      }
+    }
+
+    // ===== CARREGAR SALVOS =====
+    async function carregarSalvos() {
+      const tbody = document.querySelector('#salvosTable tbody');
+      tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+      try {
+        const { data, error } = await supabase
+          .from('insumos')
+          .select('*')
+          .order('id', { ascending: false });
+        if (error) throw error;
         tbody.innerHTML = '';
-        if (!Array.isArray(data) || !data.length) {
-          tbody.innerHTML = '<tr><td colspan="3" class="muted">Nenhum insumo salvo.</td></tr>';
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="4">Nenhum insumo salvo.</td></tr>';
           return;
         }
-        for (let i = 0; i < data.length; i++) {
-          const p = data[i];
+        data.forEach(row => {
           const tr = document.createElement('tr');
-          tr.innerHTML =
-            '<td>' + esc(p.nome) + '</td>' +
-            '<td>' + esc(p.ingrediente_ativo) + '</td>' +
-            '<td>' + esc(p.numero_registro) + '</td>';
+          tr.innerHTML = `
+            <td>${row.marca_comercial || '-'}</td>
+            <td>${row.registro || '-'}</td>
+            <td>${row.tipo || '-'}</td>
+            <td>${row.created_at ? new Date(row.created_at).toLocaleString('pt-BR') : '-'}</td>
+          `;
           tbody.appendChild(tr);
-        }
-        registrarLog('ok', 'Carregados ' + data.length + ' insumos salvos.');
-      })
-      .catch(function(err) {
-        tbody.innerHTML = '<tr><td colspan="3" class="muted">Erro ao carregar.</td></tr>';
-        registrarLog('error', 'Carregar salvos: ' + err.message);
-      });
+        });
+        stats.total = data.length;
+        atualizarDashboard();
+        log(`Salvos carregados: ${data.length}.`);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4">Erro: ${err.message}</td></tr>`;
+        log('Erro ao carregar salvos: ' + err.message, 'error');
+      }
     }
 
+    document.getElementById('btnCarregarSalvos').addEventListener('click', carregarSalvos);
+
+    // ===== DASHBOARD =====
+    async function atualizarDashboard() {
+      try {
+        const { count, error } = await supabase
+          .from('insumos')
+          .select('*', { count: 'exact', head: true });
+        if (!error) stats.total = count || 0;
+      } catch (e) {}
+      document.getElementById('statTotal').textContent = stats.total;
+      document.getElementById('statImportados').textContent = stats.importados;
+      document.getElementById('statErros').textContent = stats.erros;
+    }
+
+    // ===== LIMPAR LOG =====
+    document.getElementById('btnLimparLog').addEventListener('click', () => {
+      document.getElementById('logBox').innerHTML = '';
+    });
+
     // ===== INIT =====
-    (function init() {
-      registrarLog('info', 'Nelcir iniciado.');
-      atualizarStats();
-    })();
+    log('Sistema Nelcir iniciado.');
+    atualizarDashboard();
   </script>
 </body>
 </html>
