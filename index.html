@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estoque Fazenda - Mamão Formosa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            farmgreen: '#2f7d32',
+            farmdark: '#1b4d1f',
+            farmyellow: '#f4c430'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 antialiased">
+
+  <!-- Header -->
+  <header class="bg-farmgreen text-white shadow-md sticky top-0 z-20">
+    <div class="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
+      <div class="bg-white/20 rounded-lg p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4M3 7v10l9 4 9-4V7M3 7l9 4 9-4M12 11v10" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold leading-tight">Estoque Fazenda</h1>
+        <p class="text-xs text-white/80">Mamão Formosa · Nelcir</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-4 py-5 space-y-6">
+
+    <!-- Dashboard -->
+    <section class="grid grid-cols-2 gap-3">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 font-medium">Total de Itens</p>
+        <p id="totalItems" class="text-3xl font-bold text-farmdark mt-1">0</p>
+        <p class="text-[11px] text-gray-400 mt-1">insumos cadastrados</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 font-medium">Alertas de Estoque Baixo</p>
+        <p id="lowStockAlerts" class="text-3xl font-bold text-red-600 mt-1">0</p>
+        <p class="text-[11px] text-gray-400 mt-1">abaixo do mínimo</p>
+      </div>
+    </section>
+
+    <!-- Formulário Novo Insumo -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <h2 class="text-base font-semibold text-farmdark mb-3 flex items-center gap-2">
+        <span class="inline-block w-2 h-5 bg-farmgreen rounded"></span>
+        Novo Insumo
+      </h2>
+
+      <form id="insumoForm" class="space-y-3">
+        <div>
+          <label for="nomeComercial" class="block text-xs font-medium text-gray-600 mb-1">Nome Comercial</label>
+          <input
+            type="text"
+            id="nomeComercial"
+            placeholder="Ex: Glifosato 480 SL"
+            autocomplete="off"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-farmgreen focus:border-transparent"
+          />
+          <p id="agroApiFeedback" class="hidden mt-1 text-[11px] text-blue-600 font-medium flex items-center gap-1">
+            <svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Buscando dados na AgroAPI...
+          </p>
+        </div>
+
+        <div>
+          <label for="categoria" class="block text-xs font-medium text-gray-600 mb-1">Categoria</label>
+          <select id="categoria" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farmgreen">
+            <option value="">Selecione...</option>
+            <option value="defensivo">Defensivo Agrícola</option>
+            <option value="fertilizante">Fertilizante</option>
+            <option value="semente">Semente</option>
+            <option value="ferramenta">Ferramenta</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="quantidadeInicial" class="block text-xs font-medium text-gray-600 mb-1">Quantidade Inicial</label>
+            <input
+              type="number"
+              id="quantidadeInicial"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-farmgreen"
+            />
+          </div>
+          <div>
+            <label for="estoqueMinimo" class="block text-xs font-medium text-gray-600 mb-1">Estoque Mínimo</label>
+            <input
+              type="number"
+              id="estoqueMinimo"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-farmgreen"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-farmgreen hover:bg-farmdark text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+        >
+          + Cadastrar Insumo
+        </button>
+      </form>
+    </section>
+
+    <!-- Botões Entrada / Saída -->
+    <section class="grid grid-cols-2 gap-3">
+      <button
+        id="btnEntrada"
+        class="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold py-4 rounded-2xl shadow-sm transition flex flex-col items-center gap-1"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="text-sm">Registrar Entrada</span>
+      </button>
+      <button
+        id="btnSaida"
+        class="bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-4 rounded-2xl shadow-sm transition flex flex-col items-center gap-1"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+        </svg>
+        <span class="text-sm">Registrar Saída</span>
+      </button>
+    </section>
+
+    <!-- Lista de Insumos -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <h2 class="text-base font-semibold text-farmdark mb-3 flex items-center gap-2">
+        <span class="inline-block w-2 h-5 bg-farmyellow rounded"></span>
+        Últimos Insumos Cadastrados
+      </h2>
+
+      <div class="overflow-x-auto -mx-1">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-[11px] uppercase text-gray-400 border-b border-gray-100">
+              <th class="py-2 px-1 font-semibold">Nome</th>
+              <th class="py-2 px-1 font-semibold">Categoria</th>
+              <th class="py-2 px-1 font-semibold text-right">Qtd</th>
+              <th class="py-2 px-1 font-semibold text-right">Mín</th>
+            </tr>
+          </thead>
+          <tbody id="insumosTableBody">
+            <tr id="emptyRow">
+              <td colspan="4" class="py-6 text-center text-gray-400 text-xs">Nenhum insumo cadastrado ainda.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="max-w-md mx-auto px-4 py-6 text-center text-[11px] text-gray-400">
+    Estoque Fazenda · Mamão Formosa &copy; <span id="year"></span>
+  </footer>
+
+  <script>
+    const insumos = [];
+
+    const nomeInput = document.getElementById('nomeComercial');
+    const feedback = document.getElementById('agroApiFeedback');
+    const form = document.getElementById('insumoForm');
+    const tableBody = document.getElementById('insumosTableBody');
+    const totalItemsEl = document.getElementById('totalItems');
+    const lowStockEl = document.getElementById('lowStockAlerts');
+
+    // Simulação de busca de bula na AgroAPI
+    let agroApiTimer = null;
+    nomeInput.addEventListener('input', () => {
+      const value = nomeInput.value.trim();
+      if (value.length === 0) {
+        feedback.classList.add('hidden');
+        clearTimeout(agroApiTimer);
+        return;
+      }
+      feedback.classList.remove('hidden');
+      clearTimeout(agroApiTimer);
+      agroApiTimer = setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 1800);
+    });
+
+    function updateDashboard() {
+      totalItemsEl.textContent = insumos.length;
+      const low = insumos.filter(i => Number(i.quantidade) <= Number(i.minimo)).length;
+      lowStockEl.textContent = low;
+    }
+
+    function renderTable() {
+      if (insumos.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="py-6 text-center text-gray-400 text-xs">Nenhum insumo cadastrado ainda.</td>
+          </tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = insumos.slice().reverse().map(item => {
+        const isLow = Number(item.quantidade) <= Number(item.minimo);
+        const qtdClass = isLow ? 'text-red-600 font-bold' : 'text-gray-700';
+        return `
+          <tr class="border-b border-gray-50">
+            <td class="py-2 px-1 text-gray-800">${escapeHtml(item.nome)}</td>
+            <td class="py-2 px-1 text-gray-500 capitalize">${escapeHtml(item.categoria)}</td>
+            <td class="py-2 px-1 text-right ${qtdClass}">${item.quantidade}</td>
+            <td class="py-2 px-1 text-right text-gray-400">${item.minimo}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nome = nomeInput.value.trim();
+      const categoria = document.getElementById('categoria').value;
+      const quantidade = document.getElementById('quantidadeInicial').value;
+      const minimo = document.getElementById('estoqueMinimo').value;
+
+      if (!nome || !categoria || quantidade === '' || minimo === '') {
+        alert('Preencha todos os campos do insumo.');
+        return;
+      }
+
+      insumos.push({
+        nome,
+        categoria,
+        quantidade: Number(quantidade),
+        minimo: Number(minimo)
+      });
+
+      form.reset();
+      feedback.classList.add('hidden');
+      renderTable();
+      updateDashboard();
+    });
+
+    document.getElementById('btnEntrada').addEventListener('click', () => {
+      if (insumos.length === 0) {
+        alert('Cadastre um insumo antes de registrar movimentações.');
+        return;
+      }
+      const nome = prompt('Nome do insumo para ENTRADA:');
+      if (!nome) return;
+      const item = insumos.find(i => i.nome.toLowerCase() === nome.toLowerCase());
+      if (!item) { alert('Insumo não encontrado.'); return; }
+      const qtd = Number(prompt('Quantidade de entrada:'));
+      if (isNaN(qtd) || qtd <= 0) { alert('Quantidade inválida.'); return; }
+      item.quantidade += qtd;
+      renderTable();
+      updateDashboard();
+    });
+
+    document.getElementById('btnSaida').addEventListener('click', () => {
+      if (insumos.length === 0) {
+        alert('Cadastre um insumo antes de registrar movimentações.');
+        return;
+      }
+      const nome = prompt('Nome do insumo para SAÍDA:');
+      if (!nome) return;
+      const item = insumos.find(i => i.nome.toLowerCase() === nome.toLowerCase());
+      if (!item) { alert('Insumo não encontrado.'); return; }
+      const qtd = Number(prompt('Quantidade de saída:'));
+      if (isNaN(qtd) || qtd <= 0) { alert('Quantidade inválida.'); return; }
+      item.quantidade = Math.max(0, item.quantidade - qtd);
+      renderTable();
+      updateDashboard();
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    renderTable();
+    updateDashboard();
+  </script>
+</body>
+</html>
