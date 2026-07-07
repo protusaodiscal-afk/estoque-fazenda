@@ -3,228 +3,512 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AgroAPI Embrapa - Produtos Formulados</title>
+  <title>Nelcir - Cadastro de Insumos</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
-    body { margin: 0; padding: 24px; background: #f4f6f8; color: #222; }
-    h1 { color: #2e7d32; margin-top: 0; }
-    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    input, button { padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-    button { cursor: pointer; background: #2e7d32; color: #fff; border: none; }
-    button:hover { background: #256628; }
-    button:disabled { background: #9bb39b; cursor: not-allowed; }
-    .aviso { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; display: none; }
-    .aviso.erro { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; display: block; }
-    .aviso.sucesso { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; display: block; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-    th { background: #2e7d32; color: #fff; }
-    tr:hover { background: #f9fbf9; }
-    .carregando { color: #666; font-style: italic; }
-    .selecionar { width: 18px; height: 18px; }
+    :root {
+      --verde: #2f7d32;
+      --amarelo: #f4c430;
+      --verde-escuro: #225a23;
+      --verde-claro: #e8f5e9;
+      --cinza: #f5f5f5;
+      --erro: #c62828;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--cinza);
+      color: #333;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--verde);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+
+    header span {
+      color: var(--amarelo);
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-top: 5px solid var(--verde);
+    }
+
+    .card h2 {
+      color: var(--verde);
+      margin-bottom: 18px;
+      font-size: 20px;
+      border-bottom: 2px solid var(--amarelo);
+      padding-bottom: 8px;
+      display: inline-block;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+      color: var(--verde-escuro);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--verde);
+      box-shadow: 0 0 0 3px rgba(47,125,50,0.15);
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    #resultados-busca {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .item-busca {
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .item-busca:hover {
+      background: var(--verde-claro);
+    }
+
+    .item-busca strong {
+      color: var(--verde);
+    }
+
+    .item-busca small {
+      display: block;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    button {
+      background: var(--verde);
+      color: #fff;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 18px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: var(--verde-escuro);
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    .mensagem {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .sucesso {
+      background: var(--verde-claro);
+      color: var(--verde-escuro);
+      border: 1px solid var(--verde);
+    }
+
+    .erro {
+      background: #ffebee;
+      color: var(--erro);
+      border: 1px solid var(--erro);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--verde);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: var(--verde-claro);
+    }
+
+    .vazio {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+      font-style: italic;
+    }
+
+    .carregando {
+      text-align: center;
+      color: var(--verde);
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
-  <h1>AgroAPI Embrapa - Produtos Formulados</h1>
+  <header>
+    <h1>Nelcir <span>Agro</span></h1>
+    <p>Cadastro de Insumos Agrícolas</p>
+  </header>
 
-  <div id="aviso" class="aviso"></div>
+  <main>
+    <section class="card">
+      <h2>Buscar Produto na Embrapa</h2>
+      <label for="busca">Digite o nome do produto:</label>
+      <div class="search-wrapper">
+        <input type="text" id="busca" placeholder="Ex: glifosato, inseticida, fungicida..." autocomplete="off" />
+        <div id="resultados-busca"></div>
+      </div>
 
-  <div class="toolbar">
-    <input type="text" id="busca" placeholder="Buscar por marca comercial..." />
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnSalvar">Salvar Selecionados (Supabase)</button>
-  </div>
+      <div id="mensagem-busca" class="mensagem erro"></div>
+    </section>
 
-  <div id="status" class="carregando"></div>
+    <section class="card">
+      <h2>Dados do Insumo</h2>
+      <form id="form-insumo">
+        <label for="nome">Nome do Produto</label>
+        <input type="text" id="nome" required />
 
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Marca Comercial</th>
-        <th>Ingrediente Ativo</th>
-        <th>Número de Registro</th>
-      </tr>
-    </thead>
-    <tbody id="corpoTabela"></tbody>
-  </table>
+        <label for="ingrediente">Ingrediente Ativo</label>
+        <input type="text" id="ingrediente" required />
+
+        <label for="registro">Número de Registro</label>
+        <input type="text" id="registro" required />
+
+        <button type="submit" id="btn-salvar">Salvar Insumo</button>
+      </form>
+      <div id="mensagem-form" class="mensagem"></div>
+    </section>
+
+    <section class="card">
+      <h2>Insumos Cadastrados</h2>
+      <div id="lista-container">
+        <div class="carregando">Carregando...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Nelcir Agro &copy; 2025 - Dados fornecidos pela Embrapa (AgroAPI)
+  </footer>
 
   <script>
-    // ===== Configurações =====
+    // ===== Configurações fixas =====
+    const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+    const AGROAPI_TOKEN = '9c9499c1-7595-3271-a8f1-3f4c4cb4aee8';
+    const AGROAPI_URL = 'https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados';
 
-    // Token da AgroAPI da Embrapa (Agrofit v1)
-    // Substitua pelo seu token válido obtido em https://api.cnptia.embrapa.br
-    const AGROAPI_TOKEN = "9c9499c1-7595-3271-a8f1-3f4c4cb4aee8";
+    // ===== Inicialização do Supabase =====
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Configurações do Supabase
-    const SUPABASE_URL = "https://fzckjvvdqtyvunwxrbyl.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ===== Elementos DOM =====
+    const buscaInput = document.getElementById('busca');
+    const resultadosBusca = document.getElementById('resultados-busca');
+    const mensagemBusca = document.getElementById('mensagem-busca');
+    const formInsumo = document.getElementById('form-insumo');
+    const nomeInput = document.getElementById('nome');
+    const ingredienteInput = document.getElementById('ingrediente');
+    const registroInput = document.getElementById('registro');
+    const btnSalvar = document.getElementById('btn-salvar');
+    const mensagemForm = document.getElementById('mensagem-form');
+    const listaContainer = document.getElementById('lista-container');
 
-    // ===== Elementos =====
-    const avisoEl = document.getElementById("aviso");
-    const statusEl = document.getElementById("status");
-    const corpoTabela = document.getElementById("corpoTabela");
-    const inputBusca = document.getElementById("busca");
+    let timeoutBusca = null;
 
-    let produtosCache = [];
+    // ===== Busca na AgroAPI (Embrapa) =====
+    buscaInput.addEventListener('input', () => {
+      const termo = buscaInput.value.trim();
+      clearTimeout(timeoutBusca);
 
-    // ===== Utilitários =====
-    function mostrarAviso(mensagem, tipo = "erro") {
-      avisoEl.textContent = mensagem;
-      avisoEl.className = "aviso " + tipo;
-    }
-
-    function limparAviso() {
-      avisoEl.textContent = "";
-      avisoEl.className = "aviso";
-    }
-
-    // ===== Buscar produtos na AgroAPI da Embrapa =====
-    async function buscarProdutos(termo = "") {
-      limparAviso();
-      corpoTabela.innerHTML = "";
-      statusEl.textContent = "Carregando produtos da AgroAPI...";
-
-      if (!AGROAPI_TOKEN || AGROAPI_TOKEN === "9c9499c1-7595-3271-a8f1-3f4c4cb4aee8") {
-        statusEl.textContent = "";
-        mostrarAviso("Token da AgroAPI não configurado. Defina AGROAPI_TOKEN com um token válido.", "erro");
+      if (termo.length < 2) {
+        resultadosBusca.style.display = 'none';
+        resultadosBusca.innerHTML = '';
+        esconderMensagem(mensagemBusca);
         return;
       }
 
-      const url = new URL("https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados");
-      if (termo) {
-        url.searchParams.append("marcaComercial", termo);
-      }
+      timeoutBusca = setTimeout(() => buscarProdutos(termo), 500);
+    });
+
+    async function buscarProdutos(termo) {
+      esconderMensagem(mensagemBusca);
+      resultadosBusca.innerHTML = '<div class="carregando">Buscando...</div>';
+      resultadosBusca.style.display = 'block';
 
       try {
-        const resposta = await fetch(url.toString(), {
-          method: "GET",
+        const url = `${AGROAPI_URL}?nome=${encodeURIComponent(termo)}`;
+        const response = await fetch(url, {
           headers: {
-            "Authorization": "Bearer " + AGROAPI_TOKEN,
-            "Accept": "application/json"
+            'Authorization': `Bearer ${AGROAPI_TOKEN}`,
+            'Accept': 'application/json'
           }
         });
 
-        if (resposta.status === 401 || resposta.status === 403) {
-          statusEl.textContent = "";
-          mostrarAviso("Token da AgroAPI inválido ou não autorizado. Verifique seu AGROAPI_TOKEN.", "erro");
-          return;
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('TOKEN_EXPIRADO');
         }
 
-        if (!resposta.ok) {
-          statusEl.textContent = "";
-          mostrarAviso("Falha ao consultar a AgroAPI (HTTP " + resposta.status + "). Tente novamente mais tarde.", "erro");
-          return;
+        if (!response.ok) {
+          throw new Error('Erro ao consultar a AgroAPI: ' + response.status);
         }
 
-        const dados = await resposta.json();
-
-        // A API pode retornar os itens em "data", "produtos" ou direto como array.
-        const lista = Array.isArray(dados) ? dados
-          : (dados.data || dados.produtos || dados.resultado || []);
-
-        produtosCache = lista.map(function (item) {
-          return {
-            marcaComercial: item.marcaComercial || "",
-            ingredienteAtivo: item.ingredienteAtivo || "",
-            numeroRegistro: item.numeroRegistro || ""
-          };
-        });
-
-        renderizarTabela(produtosCache);
-        statusEl.textContent = produtosCache.length + " produto(s) encontrado(s).";
-      } catch (erro) {
-        statusEl.textContent = "";
-        mostrarAviso("Erro ao conectar à AgroAPI da Embrapa: " + erro.message, "erro");
+        const data = await response.json();
+        const produtos = extrairProdutos(data);
+        renderResultados(produtos);
+      } catch (error) {
+        if (error.message === 'TOKEN_EXPIRADO') {
+          mostrarMensagem(mensagemBusca, 'erro',
+            'O token da AgroAPI da Embrapa expirou ou é inválido. Por favor, renove o token para continuar as buscas.');
+        } else {
+          mostrarMensagem(mensagemBusca, 'erro',
+            'Não foi possível buscar os produtos. Tente novamente mais tarde.');
+        }
+        resultadosBusca.style.display = 'none';
+        console.error('Erro na busca:', error);
       }
     }
 
-    // ===== Renderizar tabela =====
-    function renderizarTabela(produtos) {
-      corpoTabela.innerHTML = "";
-      produtos.forEach(function (produto, indice) {
-        const tr = document.createElement("tr");
-
-        const tdCheck = document.createElement("td");
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "selecionar";
-        checkbox.dataset.indice = indice;
-        tdCheck.appendChild(checkbox);
-
-        const tdMarca = document.createElement("td");
-        tdMarca.textContent = produto.marcaComercial;
-
-        const tdIngrediente = document.createElement("td");
-        tdIngrediente.textContent = produto.ingredienteAtivo;
-
-        const tdRegistro = document.createElement("td");
-        tdRegistro.textContent = produto.numeroRegistro;
-
-        tr.appendChild(tdCheck);
-        tr.appendChild(tdMarca);
-        tr.appendChild(tdIngrediente);
-        tr.appendChild(tdRegistro);
-
-        corpoTabela.appendChild(tr);
-      });
+    function extrairProdutos(data) {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.data)) return data.data;
+      if (data.data && Array.isArray(data.data.produtos)) return data.data.produtos;
+      if (Array.isArray(data.resultados)) return data.resultados;
+      if (Array.isArray(data.items)) return data.items;
+      return [];
     }
 
-    // ===== Salvar selecionados no Supabase =====
-    async function salvarSelecionados() {
-      limparAviso();
-      const selecionados = Array.from(document.querySelectorAll(".selecionar:checked"))
-        .map(function (checkbox) {
-          return produtosCache[parseInt(checkbox.dataset.indice, 10)];
-        })
-        .filter(function (p) { return p !== undefined; });
-
-      if (selecionados.length === 0) {
-        mostrarAviso("Selecione ao menos um produto para salvar.", "erro");
+    function renderResultados(produtos) {
+      if (!produtos || produtos.length === 0) {
+        resultadosBusca.innerHTML = '<div class="item-busca">Nenhum produto encontrado.</div>';
         return;
       }
 
-      try {
-        const registros = selecionados.map(function (p) {
-          return {
-            marca_comercial: p.marcaComercial,
-            ingrediente_ativo: p.ingredienteAtivo,
-            numero_registro: p.numeroRegistro
-          };
+      resultadosBusca.innerHTML = produtos.map(p => {
+        const nome = p.nome || p.nomeProduto || p.nomeComercial || 'Sem nome';
+        const ingrediente = p.ingredienteAtivo || p.ingrediente_ativo || p.principioAtivo || '—';
+        const registro = p.numeroRegistro || p.numero_registro || p.registro || p.registroMapa || '—';
+        const dados = JSON.stringify(p).replace(/'/g, "&#39;");
+        return `
+          <div class="item-busca" data-produto='${dados}'>
+            <strong>${escapeHtml(nome)}</strong>
+            <small>Ingrediente: ${escapeHtml(ingrediente)} | Registro: ${escapeHtml(registro)}</small>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.item-busca[data-produto]').forEach(el => {
+        el.addEventListener('click', () => {
+          const p = JSON.parse(el.getAttribute('data-produto'));
+          selecionarProduto(p);
         });
+      });
+    }
 
-        const { error } = await supabaseClient
-          .from("produtos")
-          .insert(registros);
+    function selecionarProduto(p) {
+      nomeInput.value = p.nome || p.nomeProduto || p.nomeComercial || '';
+      ingredienteInput.value = p.ingredienteAtivo || p.ingrediente_ativo || p.principioAtivo || '';
+      registroInput.value = p.numeroRegistro || p.numero_registro || p.registro || p.registroMapa || '';
 
-        if (error) {
-          mostrarAviso("Erro ao salvar no Supabase: " + error.message, "erro");
-          return;
-        }
+      resultadosBusca.style.display = 'none';
+      buscaInput.value = '';
+      esconderMensagem(mensagemBusca);
+      nomeInput.focus();
+    }
 
-        mostrarAviso(selecionados.length + " produto(s) salvo(s) no Supabase com sucesso!", "sucesso");
-      } catch (erro) {
-        mostrarAviso("Erro inesperado ao salvar no Supabase: " + erro.message, "erro");
+    // ===== Salvar no Supabase =====
+    formInsumo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = 'Salvando...';
+      esconderMensagem(mensagemForm);
+
+      const novoInsumo = {
+        nome: nomeInput.value.trim(),
+        ingrediente_ativo: ingredienteInput.value.trim(),
+        numero_registro: registroInput.value.trim()
+      };
+
+      try {
+        const { error } = await supabase
+          .from('insumos')
+          .insert([novoInsumo]);
+
+        if (error) throw error;
+
+        mostrarMensagem(mensagemForm, 'sucesso', 'Insumo salvo com sucesso!');
+        formInsumo.reset();
+      } catch (error) {
+        mostrarMensagem(mensagemForm, 'erro',
+          'Erro ao salvar o insumo: ' + (error.message || 'desconhecido'));
+        console.error('Erro ao salvar:', error);
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = 'Salvar Insumo';
+      }
+    });
+
+    // ===== Listagem em tempo real =====
+    async function carregarInsumos() {
+      try {
+        const { data, error } = await supabase
+          .from('insumos')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (error) throw error;
+        renderLista(data || []);
+      } catch (error) {
+        listaContainer.innerHTML = `<div class="mensagem erro" style="display:block">
+          Erro ao carregar insumos: ${escapeHtml(error.message || 'desconhecido')}
+        </div>`;
+        console.error('Erro ao carregar lista:', error);
       }
     }
 
-    // ===== Eventos =====
-    document.getElementById("btnBuscar").addEventListener("click", function () {
-      buscarProdutos(inputBusca.value.trim());
-    });
+    function renderLista(insumos) {
+      if (insumos.length === 0) {
+        listaContainer.innerHTML = '<div class="vazio">Nenhum insumo cadastrado ainda.</div>';
+        return;
+      }
 
-    inputBusca.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        buscarProdutos(inputBusca.value.trim());
+      const linhas = insumos.map(i => `
+        <tr>
+          <td>${escapeHtml(i.nome || '')}</td>
+          <td>${escapeHtml(i.ingrediente_ativo || '')}</td>
+          <td>${escapeHtml(i.numero_registro || '')}</td>
+        </tr>
+      `).join('');
+
+      listaContainer.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Ingrediente Ativo</th>
+              <th>Nº Registro</th>
+            </tr>
+          </thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      `;
+    }
+
+    // ===== Inscrição em tempo real (Supabase Realtime) =====
+    supabase
+      .channel('insumos-channel')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'insumos' },
+        () => carregarInsumos()
+      )
+      .subscribe();
+
+    // ===== Utilitários =====
+    function mostrarMensagem(el, tipo, texto) {
+      el.className = 'mensagem ' + tipo;
+      el.textContent = texto;
+      el.style.display = 'block';
+    }
+
+    function esconderMensagem(el) {
+      el.style.display = 'none';
+      el.textContent = '';
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ===== Fechar resultados ao clicar fora =====
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrapper')) {
+        resultadosBusca.style.display = 'none';
       }
     });
 
-    document.getElementById("btnSalvar").addEventListener("click", salvarSelecionados);
-
     // ===== Inicialização =====
-    buscarProdutos();
+    carregarInsumos();
   </script>
 </body>
 </html>
