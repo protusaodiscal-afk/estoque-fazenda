@@ -1,379 +1,516 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nelcir - Gestão de Insumos Embrapa</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
-    header {
-      background: #1b5e20;
-      color: #fff;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    header h1 { font-size: 20px; }
-    header .token { font-size: 12px; opacity: 0.85; }
-    nav {
-      background: #fff;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      flex-wrap: wrap;
-    }
-    nav button {
-      background: none;
-      border: none;
-      padding: 14px 20px;
-      cursor: pointer;
-      font-size: 15px;
-      color: #444;
-      border-bottom: 3px solid transparent;
-    }
-    nav button:hover { background: #f0f0f0; }
-    nav button.active { color: #1b5e20; border-bottom-color: #1b5e20; font-weight: 600; }
-    main { padding: 24px; }
-    .tab { display: none; }
-    .tab.active { display: block; }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .stat { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    .stat h3 { font-size: 13px; color: #666; margin-bottom: 8px; text-transform: uppercase; }
-    .stat p { font-size: 26px; font-weight: 700; color: #1b5e20; }
-    input, select, button.action {
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button.action { background: #1b5e20; color: #fff; border: none; cursor: pointer; }
-    button.action:hover { background: #154e19; }
-    button.action:disabled { background: #9e9e9e; cursor: not-allowed; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; }
-    th { background: #f9f9f9; color: #555; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; background: #e8f5e9; color: #1b5e20; }
-    .log { background: #111; color: #0f0; padding: 14px; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 420px; overflow-y: auto; }
-    .log .err { color: #ff6b6b; }
-    .log .warn { color: #ffd166; }
-    .log .info { color: #8ecae6; }
-    .muted { color: #888; font-size: 13px; }
-    .toast {
-      position: fixed; bottom: 20px; right: 20px; background: #1b5e20; color: #fff;
-      padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      opacity: 0; transition: opacity 0.3s; z-index: 9999;
-    }
-    .toast.show { opacity: 1; }
-    .toast.err { background: #c62828; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nelcir - Gestão Fazenda</title>
+<style>
+  :root{
+    --verde:#2e7d32;
+    --verde-escuro:#1b5e20;
+    --verde-claro:#a5d6a7;
+    --fundo:#f1f8e9;
+    --texto:#1b1b1b;
+    --borda:#c5e1a5;
+  }
+  *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
+  body{margin:0;background:var(--fundo);color:var(--texto);}
+  header{background:var(--verde);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+  header h1{margin:0;font-size:20px;}
+  nav{background:var(--verde-escuro);display:flex;flex-wrap:wrap;}
+  nav button{flex:1;min-width:120px;background:transparent;border:none;color:#fff;padding:14px;cursor:pointer;font-size:15px;}
+  nav button:hover{background:rgba(255,255,255,0.12);}
+  nav button.ativo{background:var(--verde);border-bottom:3px solid #fff;}
+  main{padding:18px;max-width:1100px;margin:0 auto;}
+  .aba{display:none;}
+  .aba.ativa{display:block;}
+  .card{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:16px;margin-bottom:16px;}
+  .card h2{margin:0 0 12px;color:var(--verde-escuro);font-size:18px;}
+  label{display:block;margin:8px 0 4px;font-weight:bold;font-size:14px;}
+  input,select,textarea{width:100%;padding:9px;border:1px solid #bbb;border-radius:5px;font-size:14px;}
+  button.acao{background:var(--verde);color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:15px;}
+  button.acao:hover{background:var(--verde-escuro);}
+  button.acao:disabled{opacity:0.6;cursor:wait;}
+  button.secundario{background:#eee;color:#333;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .msg{padding:10px;border-radius:6px;margin:10px 0;font-size:14px;}
+  .msg.ok{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20;}
+  .msg.erro{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c;}
+  .msg.info{background:#e3f2fd;border:1px solid #90caf9;color:#0d47a1;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;}
+  th,td{border:1px solid var(--borda);padding:8px;text-align:left;font-size:14px;}
+  th{background:var(--verde-claro);}
+  .oculto{display:none !important;}
+  .aviso-manual{background:#fffde7;border:1px solid #fff59d;padding:10px;border-radius:6px;margin:10px 0;}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Nelcir - Gestão de Insumos</h1>
-    <div class="token">Token Embrapa: d6239332-d34b-3c85-9395-fd746aea9e08</div>
-  </header>
 
-  <nav id="nav">
-    <button data-tab="dashboard" class="active">Dashboard</button>
-    <button data-tab="importar">Importar</button>
-    <button data-tab="salvos">Salvos</button>
-    <button data-tab="log">Log</button>
-  </nav>
+<header>
+  <h1>🌿 Nelcir - Gestão Fazenda</h1>
+  <span id="statusAuth" style="font-size:13px;">Carregando...</span>
+</header>
 
-  <main>
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="tab active">
-      <div class="grid">
-        <div class="stat"><h3>Total Salvos</h3><p id="statTotal">0</p></div>
-        <div class="stat"><h3>Importações Hoje</h3><p id="statHoje">0</p></div>
-        <div class="stat"><h3>Última Busca</h3><p id="statUltima">-</p></div>
-        <div class="stat"><h3>Status API</h3><p id="statApi">-</p></div>
-      </div>
-      <div class="card">
-        <h2>Resumo</h2>
-        <p class="muted">Painel de controle do Nelcir. Use a aba <strong>Importar</strong> para buscar produtos na Embrapa e salvar no Supabase.</p>
-      </div>
-    </section>
+<nav>
+  <button type="button" class="ativo" data-aba="importacao" onclick="trocarAba('importacao',this)">Importação</button>
+  <button type="button" data-aba="cadastros" onclick="trocarAba('cadastros',this)">Cadastros</button>
+  <button type="button" data-aba="relatorios" onclick="trocarAba('relatorios',this)">Relatórios</button>
+  <button type="button" data-aba="config" onclick="trocarAba('config',this)">Config</button>
+</nav>
 
-    <!-- IMPORTAR -->
-    <section id="importar" class="tab">
-      <div class="card">
-        <h2>Importar da Embrapa</h2>
-        <div class="row">
-          <input type="text" id="busca" placeholder="Marca comercial (ex: Roundup)" style="flex:1; min-width:220px;" />
-          <button class="action" id="btnBuscar">Buscar</button>
-          <button class="action" id="btnSalvarTodos" disabled>Salvar Todos</button>
+<main>
+
+  <!-- ABA IMPORTAÇÃO -->
+  <section id="importacao" class="aba ativa">
+    <div class="card">
+      <h2>Buscar Produção - Embrapa</h2>
+      <div class="grid2">
+        <div>
+          <label>Tipo de Dado</label>
+          <select id="embTipo">
+            <option value="producao">Produção</option>
+            <option value="comercializacao">Comercialização</option>
+            <option value="processamento">Processamento</option>
+            <option value="importacao">Importação</option>
+            <option value="exportacao">Exportação</option>
+          </select>
         </div>
-        <p class="muted">Resultados da API Embrapa (via proxy allorigins).</p>
-        <table id="tblResultados">
-          <thead>
-            <tr><th></th><th>Marca Comercial</th><th>Ingrediente Ativo</th><th>Nº Registro</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SALVOS -->
-    <section id="salvos" class="tab">
-      <div class="card">
-        <h2>Insumos Salvos (Supabase)</h2>
-        <div class="row">
-          <input type="text" id="filtroSalvos" placeholder="Filtrar por nome..." style="flex:1; min-width:220px;" />
-          <button class="action" id="btnAtualizarSalvos">Atualizar</button>
+        <div>
+          <label>Ano</label>
+          <input type="number" id="embAno" value="2023" min="1970" max="2099">
         </div>
-        <table id="tblSalvos">
-          <thead>
-            <tr><th>Nome</th><th>Ingrediente Ativo</th><th>Nº Registro</th><th></th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- LOG -->
-    <section id="log" class="tab">
-      <div class="card">
-        <h2>Log do Sistema</h2>
-        <div class="row">
-          <button class="action" id="btnLimparLog">Limpar Log</button>
+        <div>
+          <label>Subopção (opcional)</label>
+          <input type="text" id="embSub" placeholder="ex: viniferas, sucos, espumantes">
         </div>
-        <div class="log" id="logBox"></div>
       </div>
-    </section>
-  </main>
+      <div style="margin-top:12px;">
+        <button type="button" class="acao" id="btnBuscar" onclick="buscarEmbrapa()">🔍 Buscar Embrapa</button>
+      </div>
+      <div id="embMsg"></div>
+    </div>
 
-  <div class="toast" id="toast"></div>
+    <div class="card oculto" id="cardResultado">
+      <h2>Resultado da Busca</h2>
+      <div id="embResultado"></div>
+      <button type="button" class="acao" style="margin-top:10px;" onclick="salvarResultadoEmbrapa()">💾 Salvar no Supabase</button>
+    </div>
 
-  <script>
-    // ===== CONFIGURAÇÕES =====
-    const EMBRAPA_TOKEN = 'd6239332-d34b-3c85-9395-fd746aea9e08';
-    const EMBRAPA_URL = 'https://api.cnptia.embrapa.br/agrofit/v1/produtos-formulados?marcaComercial=';
-    const PROXY = 'https://api.allorigins.win/raw?url=';
-    const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+    <div class="card oculto" id="cardManual">
+      <h2>📝 Cadastro Manual</h2>
+      <div class="aviso-manual">A busca Embrapa falhou ou foi cancelada. Preencha os dados manualmente abaixo.</div>
+      <div class="grid2">
+        <div>
+          <label>Tipo</label>
+          <select id="manTipo">
+            <option value="producao">Produção</option>
+            <option value="comercializacao">Comercialização</option>
+            <option value="processamento">Processamento</option>
+            <option value="importacao">Importação</option>
+            <option value="exportacao">Exportação</option>
+          </select>
+        </div>
+        <div>
+          <label>Ano</label>
+          <input type="number" id="manAno" value="2023">
+        </div>
+        <div>
+          <label>Produto / Cultivar</label>
+          <input type="text" id="manProduto" placeholder="Ex: Uva, Vinho, Suco">
+        </div>
+        <div>
+          <label>Quantidade (L / Kg)</label>
+          <input type="number" id="manQuantidade" step="0.01">
+        </div>
+        <div>
+          <label>Região / UF</label>
+          <input type="text" id="manRegiao" placeholder="Ex: RS, SP, BR">
+        </div>
+        <div>
+          <label>Observação</label>
+          <input type="text" id="manObs">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button type="button" class="acao" onclick="salvarManual()">💾 Salvar Manual</button>
+        <button type="button" class="acao secundario" onclick="limparManual()">Limpar</button>
+      </div>
+      <div id="manMsg"></div>
+    </div>
+  </section>
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- ABA CADASTROS -->
+  <section id="cadastros" class="aba">
+    <div class="card">
+      <h2>Cadastros Salvos</h2>
+      <button type="button" class="acao" onclick="listarCadastros()">🔄 Atualizar Lista</button>
+      <div id="cadMsg"></div>
+      <table id="tabelaCadastros">
+        <thead>
+          <tr><th>Tipo</th><th>Ano</th><th>Produto</th><th>Quantidade</th><th>Região</th><th>Origem</th><th>Ação</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-    let resultadosAtuais = [];
-    let importacoesHoje = 0;
+  <!-- ABA RELATÓRIOS -->
+  <section id="relatorios" class="aba">
+    <div class="card">
+      <h2>Relatório Resumido</h2>
+      <button type="button" class="acao" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+      <div id="relMsg"></div>
+      <div id="relConteudo"></div>
+    </div>
+  </section>
 
-    // ===== NAVEGAÇÃO INDEPENDENTE =====
-    const navButtons = document.querySelectorAll('#nav button');
-    const tabs = document.querySelectorAll('.tab');
-    navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        navButtons.forEach(b => b.classList.remove('active'));
-        tabs.forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        const target = document.getElementById(btn.dataset.tab);
-        if (target) target.classList.add('active');
-        if (btn.dataset.tab === 'salvos') carregarSalvos();
-        if (btn.dataset.tab === 'dashboard') atualizarDashboard();
-      });
+  <!-- ABA CONFIG -->
+  <section id="config" class="aba">
+    <div class="card">
+      <h2>Configuração</h2>
+      <p><strong>Supabase:</strong> conectado automaticamente.</p>
+      <p><strong>Token Embrapa:</strong> fixo no sistema.</p>
+      <p><strong>Proxy:</strong> api.allorigins.win</p>
+      <button type="button" class="acao" onclick="testarConexao()">🔌 Testar Conexão Supabase</button>
+      <div id="cfgMsg"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   1) NAVEGAÇÃO DE ABAS - PRIMEIRO E PURAMENTE FUNCIONAL
+   ============================================================ */
+function trocarAba(nome, btn){
+  try{
+    var abas = document.querySelectorAll('.aba');
+    for(var i=0;i<abas.length;i++){ abas[i].classList.remove('ativa'); abas[i].style.display='none'; }
+    var alvo = document.getElementById(nome);
+    if(alvo){ alvo.classList.add('ativa'); alvo.style.display='block'; }
+    var btns = document.querySelectorAll('nav button');
+    for(var j=0;j<btns.length;j++){ btns[j].classList.remove('ativo'); }
+    if(btn){ btn.classList.add('ativo'); }
+  }catch(e){
+    console.error('Erro troca aba:', e);
+  }
+}
+/* Garante estado inicial visível */
+document.addEventListener('DOMContentLoaded', function(){
+  var imp = document.getElementById('importacao');
+  if(imp){ imp.style.display='block'; }
+});
+
+/* ============================================================
+   2) CONFIG FIXA
+   ============================================================ */
+var SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+var EMBRAPA_TOKEN = 'd6239332-d34b-3c85-9395-fd746aea9e08';
+var PROXY = 'https://api.allorigins.win/raw?url=';
+var TABELA = 'nelcir_dados';
+
+/* ============================================================
+   3) HELPERS UI
+   ============================================================ */
+function setMsg(id, txt, tipo){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = '<div class="msg '+(tipo||'info')+'">'+txt+'</div>';
+}
+function limparMsg(id){
+  var el = document.getElementById(id);
+  if(el) el.innerHTML = '';
+}
+function liberarBotaoBusca(){
+  var b = document.getElementById('btnBuscar');
+  if(b){ b.disabled = false; b.textContent = '🔍 Buscar Embrapa'; }
+}
+
+/* ============================================================
+   4) BUSCA EMBRAPA COM DISJUNTOR 5s
+   ============================================================ */
+function buscarEmbrapa(){
+  var btn = document.getElementById('btnBuscar');
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  limparMsg('embMsg');
+  document.getElementById('cardResultado').classList.add('oculto');
+  document.getElementById('cardManual').classList.add('oculto');
+
+  var tipo = document.getElementById('embTipo').value;
+  var ano = document.getElementById('embAno').value;
+  var sub = document.getElementById('embSub').value.trim();
+
+  var urlBase = 'http://vitibrasil.cnpuv.embrapa.br/api/v1/' + encodeURIComponent(tipo) + '/' + encodeURIComponent(ano);
+  if(sub){ urlBase += '?subopcao=' + encodeURIComponent(sub); }
+  urlBase += (sub ? '&' : '?') + 'token=' + EMBRAPA_TOKEN;
+
+  var urlFinal = PROXY + encodeURIComponent(urlBase);
+
+  var timeoutId = setTimeout(function(){
+    setMsg('embMsg','⏱️ Tempo limite de 5s atingido. Você pode cadastrar manualmente.','erro');
+    liberarBotaoBusca();
+    mostrarManual();
+  }, 5000);
+
+  fetch(urlFinal, { method:'GET' })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.text();
+    })
+    .then(function(txt){
+      clearTimeout(timeoutId);
+      var dados;
+      try{ dados = JSON.parse(txt); }
+      catch(e){ throw new Error('Resposta inválida'); }
+      renderResultadoEmbrapa(dados);
+      liberarBotaoBusca();
+    })
+    .catch(function(err){
+      clearTimeout(timeoutId);
+      setMsg('embMsg','❌ Falha na busca: '+err.message+'. Cadastro manual disponível.','erro');
+      liberarBotaoBusca();
+      mostrarManual();
     });
+}
 
-    // ===== LOG =====
-    const logBox = document.getElementById('logBox');
-    function log(msg, tipo = 'info') {
-      const time = new Date().toLocaleTimeString('pt-BR');
-      const div = document.createElement('div');
-      div.className = tipo;
-      div.textContent = `[${time}] ${msg}`;
-      logBox.appendChild(div);
-      logBox.scrollTop = logBox.scrollHeight;
+function renderResultadoEmbrapa(dados){
+  var lista = [];
+  if(Array.isArray(dados)) lista = dados;
+  else if(dados && Array.isArray(dados.dados)) lista = dados.dados;
+  else if(dados && typeof dados === 'object') lista = [dados];
+
+  var html = '<p>Registros encontrados: <strong>'+lista.length+'</strong></p>';
+  if(lista.length === 0){ html += '<p>Nenhum dado retornado.</p>'; }
+  else{
+    html += '<table><thead><tr><th>Ano</th><th>Produto</th><th>Quantidade</th></tr></thead><tbody>';
+    for(var i=0;i<Math.min(lista.length,50);i++){
+      var it = lista[i] || {};
+      html += '<tr><td>'+(it.ano||'-')+'</td><td>'+(it.produto||it.cultivar||'-')+'</td><td>'+(it.quantidade||'-')+'</td></tr>';
     }
-    document.getElementById('btnLimparLog').addEventListener('click', () => { logBox.innerHTML = ''; });
+    html += '</tbody></table>';
+  }
+  document.getElementById('embResultado').innerHTML = html;
+  document.getElementById('cardResultado').classList.remove('oculto');
+  window._ultimoResultado = lista;
+  setMsg('embMsg','✅ Busca concluída.','ok');
+}
 
-    // ===== TOAST =====
-    const toast = document.getElementById('toast');
-    function showToast(msg, err = false) {
-      toast.textContent = msg;
-      toast.className = 'toast show' + (err ? ' err' : '');
-      setTimeout(() => toast.className = 'toast' + (err ? ' err' : ''), 3000);
+function mostrarManual(){
+  var card = document.getElementById('cardManual');
+  if(card){ card.classList.remove('oculto'); }
+  var tipo = document.getElementById('embTipo');
+  var ano = document.getElementById('embAno');
+  if(tipo) document.getElementById('manTipo').value = tipo.value;
+  if(ano) document.getElementById('manAno').value = ano.value;
+}
+
+/* ============================================================
+   5) SUPABASE - INSERÇÕES
+   ============================================================ */
+function supabaseInsert(payload, cb){
+  var url = SUPABASE_URL + '/rest/v1/' + TABELA;
+  fetch(url, {
+    method:'POST',
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Prefer':'return=representation'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(json){ cb(null, json); })
+  .catch(function(err){ cb(err.message || 'Erro'); });
+}
+
+function supabaseSelect(cb){
+  var url = SUPABASE_URL + '/rest/v1/' + TABELA + '?order=id.desc&limit=200';
+  fetch(url, {
+    method:'GET',
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
     }
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(json){ cb(null, json); })
+  .catch(function(err){ cb(err.message || 'Erro'); });
+}
 
-    // ===== DASHBOARD =====
-    async function atualizarDashboard() {
-      try {
-        const { count, error } = await supabase
-          .from('insumos')
-          .select('*', { count: 'exact', head: true });
-        if (error) throw error;
-        document.getElementById('statTotal').textContent = count ?? 0;
-      } catch (e) {
-        log('Erro ao contar insumos: ' + e.message, 'err');
-        document.getElementById('statTotal').textContent = 'Erro';
+function supabaseDelete(id, cb){
+  var url = SUPABASE_URL + '/rest/v1/' + TABELA + '?id=eq.' + encodeURIComponent(id);
+  fetch(url, {
+    method:'DELETE',
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    }
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+  .then(function(){ cb(null); })
+  .catch(function(err){ cb(err.message || 'Erro'); });
+}
+
+/* ============================================================
+   6) SALVAR RESULTADO EMBRAPA
+   ============================================================ */
+function salvarResultadoEmbrapa(){
+  var lista = window._ultimoResultado || [];
+  if(lista.length === 0){
+    setMsg('embMsg','Nada para salvar.','erro');
+    return;
+  }
+  var tipo = document.getElementById('embTipo').value;
+  var ano = document.getElementById('embAno').value;
+  var salvos = 0, erros = 0, pend = lista.length;
+  setMsg('embMsg','Salvando '+pend+' registros...','info');
+
+  lista.forEach(function(it){
+    var payload = {
+      tipo: tipo,
+      ano: parseInt(it.ano||ano,10),
+      produto: String(it.produto||it.cultivar||''),
+      quantidade: parseFloat(it.quantidade||0)||0,
+      regiao: String(it.regiao||'BR'),
+      origem: 'embrapa',
+      observacao: 'Importado via Embrapa'
+    };
+    supabaseInsert(payload, function(err){
+      pend--;
+      if(err) erros++; else salvos++;
+      if(pend === 0){
+        setMsg('embMsg','✅ Salvos: '+salvos+' | Erros: '+erros, erros>0?'erro':'ok');
       }
-      document.getElementById('statHoje').textContent = importacoesHoje;
-      document.getElementById('statUltima').textContent = localStorage.getItem('nelcir_ultima') || '-';
-      document.getElementById('statApi').textContent = 'Configurada';
-    }
-
-    // ===== BUSCAR EMBRAPA =====
-    document.getElementById('btnBuscar').addEventListener('click', buscarEmbrapa);
-    document.getElementById('busca').addEventListener('keypress', e => { if (e.key === 'Enter') buscarEmbrapa(); });
-
-    async function buscarEmbrapa() {
-      const termo = document.getElementById('busca').value.trim();
-      if (!termo) { showToast('Digite uma marca comercial.', true); return; }
-      const btn = document.getElementById('btnBuscar');
-      btn.disabled = true; btn.textContent = 'Buscando...';
-      log('Buscando Embrapa: ' + termo);
-      try {
-        const targetUrl = encodeURIComponent(EMBRAPA_URL + encodeURIComponent(termo));
-        const url = PROXY + targetUrl;
-        const res = await fetch(url, {
-          headers: { 'Authorization': 'Bearer ' + EMBRAPA_TOKEN, 'Accept': 'application/json' }
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const lista = (data && (data.dados || data.data || data.produtos || data)) || [];
-        resultadosAtuais = Array.isArray(lista) ? lista : [lista];
-        renderResultados();
-        localStorage.setItem('nelcir_ultima', new Date().toLocaleString('pt-BR'));
-        log('Encontrados ' + resultadosAtuais.length + ' produtos.', 'info');
-        showToast(resultadosAtuais.length + ' produtos encontrados.');
-        atualizarDashboard();
-      } catch (e) {
-        log('Erro na busca Embrapa: ' + e.message, 'err');
-        showToast('Erro na busca: ' + e.message, true);
-        resultadosAtuais = [];
-        renderResultados();
-      } finally {
-        btn.disabled = false; btn.textContent = 'Buscar';
-      }
-    }
-
-    function renderResultados() {
-      const tbody = document.querySelector('#tblResultados tbody');
-      tbody.innerHTML = '';
-      resultadosAtuais.forEach((p, idx) => {
-        const nome = p.marcaComercial || p.nome || p.marca || '';
-        const ing = p.ingredienteAtivo || p.ingrediente_ativo || p.ingrediente || '';
-        const reg = p.numeroRegistro || p.numero_registro || p.registro || '';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input type="checkbox" data-idx="${idx}" checked /></td>
-          <td>${escapeHtml(nome)}</td>
-          <td>${escapeHtml(ing)}</td>
-          <td>${escapeHtml(String(reg))}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      document.getElementById('btnSalvarTodos').disabled = resultadosAtuais.length === 0;
-    }
-
-    // ===== SALVAR =====
-    document.getElementById('btnSalvarTodos').addEventListener('click', async () => {
-      const checks = document.querySelectorAll('#tblResultados tbody input[type=checkbox]:checked');
-      if (checks.length === 0) { showToast('Selecione ao menos um produto.', true); return; }
-      const btn = document.getElementById('btnSalvarTodos');
-      btn.disabled = true; btn.textContent = 'Salvando...';
-      let ok = 0, falha = 0;
-      for (const chk of checks) {
-        const p = resultadosAtuais[parseInt(chk.dataset.idx)];
-        const nome = p.marcaComercial || p.nome || p.marca || '';
-        const ing = p.ingredienteAtivo || p.ingrediente_ativo || p.ingrediente || '';
-        const reg = p.numeroRegistro || p.numero_registro || p.registro || '';
-        try {
-          const { error } = await supabase
-            .from('insumos')
-            .insert([{ nome: nome, ingrediente_ativo: ing, numero_registro: String(reg) }]);
-          if (error) { log('Falha ao salvar ' + nome + ': ' + error.message, 'err'); falha++; }
-          else { ok++; importacoesHoje++; }
-        } catch (e) {
-          log('Exceção ao salvar ' + nome + ': ' + e.message, 'err');
-          falha++;
-        }
-      }
-      log('Salvamento concluído: ' + ok + ' ok, ' + falha + ' falhas.', ok ? 'info' : 'err');
-      showToast(ok + ' salvos, ' + falha + ' falhas.', falha > 0);
-      btn.disabled = false; btn.textContent = 'Salvar Todos';
-      atualizarDashboard();
     });
+  });
+}
 
-    // ===== SALVOS =====
-    document.getElementById('btnAtualizarSalvos').addEventListener('click', carregarSalvos);
-    document.getElementById('filtroSalvos').addEventListener('input', renderSalvos);
+/* ============================================================
+   7) CADASTRO MANUAL
+   ============================================================ */
+function salvarManual(){
+  var payload = {
+    tipo: document.getElementById('manTipo').value,
+    ano: parseInt(document.getElementById('manAno').value,10)||0,
+    produto: document.getElementById('manProduto').value.trim(),
+    quantidade: parseFloat(document.getElementById('manQuantidade').value)||0,
+    regiao: document.getElementById('manRegiao').value.trim(),
+    origem: 'manual',
+    observacao: document.getElementById('manObs').value.trim()
+  };
+  if(!payload.produto){
+    setMsg('manMsg','Informe o produto.','erro');
+    return;
+  }
+  setMsg('manMsg','Salvando...','info');
+  supabaseInsert(payload, function(err){
+    if(err){ setMsg('manMsg','❌ Erro: '+err,'erro'); }
+    else{ setMsg('manMsg','✅ Salvo com sucesso!','ok'); limparManual(); }
+  });
+}
 
-    let salvosCache = [];
-    async function carregarSalvos() {
-      log('Carregando insumos do Supabase...');
-      try {
-        const { data, error } = await supabase
-          .from('insumos')
-          .select('id,nome,ingrediente_ativo,numero_registro')
-          .order('nome', { ascending: true });
-        if (error) throw error;
-        salvosCache = data || [];
-        renderSalvos();
-        log('Carregados ' + salvosCache.length + ' insumos.');
-      } catch (e) {
-        log('Erro ao carregar salvos: ' + e.message, 'err');
-        showToast('Erro ao carregar salvos.', true);
-      }
+function limparManual(){
+  document.getElementById('manProduto').value='';
+  document.getElementById('manQuantidade').value='';
+  document.getElementById('manRegiao').value='';
+  document.getElementById('manObs').value='';
+}
+
+/* ============================================================
+   8) LISTAR CADASTROS
+   ============================================================ */
+function listarCadastros(){
+  setMsg('cadMsg','Carregando...','info');
+  supabaseSelect(function(err, dados){
+    if(err){
+      setMsg('cadMsg','❌ Erro: '+err,'erro');
+      return;
     }
-
-    function renderSalvos() {
-      const filtro = document.getElementById('filtroSalvos').value.toLowerCase();
-      const tbody = document.querySelector('#tblSalvos tbody');
-      tbody.innerHTML = '';
-      salvosCache
-        .filter(i => (i.nome || '').toLowerCase().includes(filtro))
-        .forEach(i => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${escapeHtml(i.nome || '')}</td>
-            <td>${escapeHtml(i.ingrediente_ativo || '')}</td>
-            <td>${escapeHtml(i.numero_registro || '')}</td>
-            <td><button class="action" data-del="${i.id}">Excluir</button></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      tbody.querySelectorAll('button[data-del]').forEach(b => {
-        b.addEventListener('click', async () => {
-          const id = b.dataset.del;
-          try {
-            const { error } = await supabase.from('insumos').delete().eq('id', id);
-            if (error) throw error;
-            log('Insumo excluído: ' + id);
-            carregarSalvos();
-            atualizarDashboard();
-          } catch (e) {
-            log('Erro ao excluir: ' + e.message, 'err');
-            showToast('Erro ao excluir.', true);
-          }
-        });
-      });
+    var tbody = document.querySelector('#tabelaCadastros tbody');
+    tbody.innerHTML = '';
+    if(!dados || dados.length === 0){
+      setMsg('cadMsg','Nenhum cadastro encontrado.','info');
+      return;
     }
+    limparMsg('cadMsg');
+    dados.forEach(function(d){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+(d.tipo||'-')+'</td><td>'+(d.ano||'-')+'</td><td>'+(d.produto||'-')+'</td>'+
+        '<td>'+(d.quantidade||'-')+'</td><td>'+(d.regiao||'-')+'</td><td>'+(d.origem||'-')+'</td>'+
+        '<td><button class="acao secundario" onclick="excluirCadastro('+d.id+')">Excluir</button></td>';
+      tbody.appendChild(tr);
+    });
+  });
+}
 
-    // ===== UTIL =====
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function excluirCadastro(id){
+  if(!confirm('Excluir este cadastro?')) return;
+  supabaseDelete(id, function(err){
+    if(err){ setMsg('cadMsg','❌ Erro: '+err,'erro'); }
+    else{ setMsg('cadMsg','✅ Excluído.','ok'); listarCadastros(); }
+  });
+}
+
+/* ============================================================
+   9) RELATÓRIO
+   ============================================================ */
+function gerarRelatorio(){
+  setMsg('relMsg','Gerando...','info');
+  supabaseSelect(function(err, dados){
+    if(err){ setMsg('relMsg','❌ Erro: '+err,'erro'); return; }
+    if(!dados || dados.length === 0){
+      setMsg('relMsg','Sem dados para relatório.','info');
+      document.getElementById('relConteudo').innerHTML='';
+      return;
     }
+    limparMsg('relMsg');
+    var total = dados.length;
+    var soma = 0;
+    var porTipo = {};
+    dados.forEach(function(d){
+      var q = parseFloat(d.quantidade)||0;
+      soma += q;
+      var t = d.tipo||'outros';
+      porTipo[t] = (porTipo[t]||0) + q;
+    });
+    var html = '<div class="card"><h3>Resumo Geral</h3>';
+    html += '<p>Total de registros: <strong>'+total+'</strong></p>';
+    html += '<p>Soma de quantidades: <strong>'+soma.toLocaleString('pt-BR')+'</strong></p>';
+    html += '<h3>Por Tipo</h3><table><thead><tr><th>Tipo</th><th>Quantidade Total</th></tr></thead><tbody>';
+    Object.keys(porTipo).forEach(function(k){
+      html += '<tr><td>'+k+'</td><td>'+(porTipo[k]).toLocaleString('pt-BR')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('relConteudo').innerHTML = html;
+  });
+}
 
-    // ===== INIT =====
-    log('Nelcir iniciado. Token Embrapa atualizado.');
-    log('Proxy: ' + PROXY);
-    log('Supabase: ' + SUPABASE_URL);
-    atualizarDashboard();
-  </script>
+/* ============================================================
+  10) TESTE DE CONEXÃO
+   ============================================================ */
+function testarConexao(){
+  setMsg('cfgMsg','Testando...','info');
+  supabaseSelect(function(err){
+    if(err) setMsg('cfgMsg','❌ Falha: '+err,'erro');
+    else setMsg('cfgMsg','✅ Conexão OK com Supabase.','ok');
+  });
+}
+
+/* Status inicial */
+window.addEventListener('load', function(){
+  var st = document.getElementById('statusAuth');
+  if(st) st.textContent = 'Sistema pronto';
+});
+</script>
 </body>
 </html>
