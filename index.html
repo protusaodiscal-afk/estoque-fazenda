@@ -1,760 +1,469 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nelcir - Gestão de Insumos Agrícolas</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root {
-      --verde-fazenda: #2e7d32;
-      --verde-claro: #4caf50;
-      --verde-escuro: #1b5e20;
-      --verde-bg: #e8f5e9;
-      --branco: #ffffff;
-      --cinza: #f5f5f5;
-      --cinza-escuro: #333333;
-      --vermelho: #c62828;
-      --amarelo: #f9a825;
-      --sombra: 0 2px 8px rgba(0,0,0,0.12);
-      --sombra-hover: 0 4px 16px rgba(0,0,0,0.2);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-
-    body { background: var(--verde-bg); color: var(--cinza-escuro); min-height: 100vh; }
-
-    header {
-      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-fazenda));
-      color: var(--branco);
-      padding: 20px;
-      text-align: center;
-      box-shadow: var(--sombra);
-    }
-
-    header h1 { font-size: 28px; margin-bottom: 5px; }
-    header p { font-size: 14px; opacity: 0.9; }
-
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      background: var(--verde-fazenda);
-      padding: 12px;
-      flex-wrap: wrap;
-    }
-
-    nav button {
-      background: var(--branco);
-      color: var(--verde-escuro);
-      border: none;
-      padding: 10px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 600;
-      transition: all 0.3s;
-      box-shadow: var(--sombra);
-    }
-
-    nav button:hover { background: var(--verde-claro); color: var(--branco); transform: translateY(-2px); }
-    nav button.active { background: var(--verde-escuro); color: var(--branco); }
-
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-
-    .tab-content { display: none; }
-
-    .card {
-      background: var(--branco);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: var(--sombra);
-      margin-bottom: 20px;
-    }
-
-    .card h2 { color: var(--verde-escuro); margin-bottom: 15px; font-size: 20px; }
-
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .search-box input {
-      flex: 1;
-      min-width: 250px;
-      padding: 12px 16px;
-      border: 2px solid var(--verde-claro);
-      border-radius: 8px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    .search-box input:focus { border-color: var(--verde-escuro); }
-
-    .search-box select {
-      padding: 12px 16px;
-      border: 2px solid var(--verde-claro);
-      border-radius: 8px;
-      font-size: 15px;
-      background: var(--branco);
-      cursor: pointer;
-    }
-
-    table { width: 100%; border-collapse: collapse; }
-
-    th { background: var(--verde-fazenda); color: var(--branco); padding: 12px; text-align: left; font-size: 14px; }
-    td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
-    tr:hover { background: var(--verde-bg); }
-
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-
-    .btn-entrada { background: var(--verde-claro); color: var(--branco); }
-    .btn-entrada:hover { background: var(--verde-escuro); }
-
-    .btn-saida { background: var(--vermelho); color: var(--branco); }
-    .btn-saida:hover { background: #b71c1c; }
-
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-overlay.active { display: flex; }
-
-    .modal {
-      background: var(--branco);
-      border-radius: 12px;
-      padding: 30px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: var(--sombra-hover);
-    }
-
-    .modal h3 { color: var(--verde-escuro); margin-bottom: 20px; text-align: center; }
-
-    .modal label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--verde-escuro); font-size: 14px; }
-
-    .modal input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid var(--verde-claro);
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    .modal input:focus { border-color: var(--verde-escuro); }
-
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-    .btn-cancelar { background: #e0e0e0; color: var(--cinza-escuro); }
-    .btn-cancelar:hover { background: #bdbdbd; }
-
-    .btn-salvar { background: var(--verde-fazenda); color: var(--branco); }
-    .btn-salvar:hover { background: var(--verde-escuro); }
-
-    .info-produto {
-      background: var(--verde-bg);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 14px;
-    }
-
-    .info-produto strong { color: var(--verde-escuro); }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #888;
-      font-size: 16px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .badge-nativo { background: #e3f2fd; color: #1565c0; }
-    .badge-roundup { background: #fff3e0; color: #e65100; }
-    .badge-actara { background: #f3e5f5; color: #6a1b9a; }
-    .badge-score { background: #e8f5e9; color: #2e7d32; }
-    .badge-vertimec { background: #fce4ec; color: #ad1457; }
-    .badge-bioinsumo { background: #e0f7fa; color: #00695c; }
-    .badge-outro { background: #f5f5f5; color: #616161; }
-
-    .saldo-box {
-      font-weight: 700;
-      color: var(--verde-escuro);
-    }
-
-    .preco-box { color: var(--verde-fazenda); font-weight: 600; }
-
-    #resultadoBusca { max-height: 500px; overflow-y: auto; }
-
-    .loading { text-align: center; padding: 20px; color: var(--verde-fazenda); }
-
-    footer { text-align: center; padding: 20px; color: var(--verde-escuro); font-size: 13px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nelcir - Gestão de Insumos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --verde-fazenda:#2e7d32;
+    --verde-escuro:#1b5e20;
+    --verde-claro:#66bb6a;
+    --verde-bg:#f1f8e9;
+    --branco:#ffffff;
+    --cinza:#757575;
+    --vermelho:#c62828;
+    --sombra:0 4px 12px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
+  body{background:var(--verde-bg);color:#333;}
+  header{background:linear-gradient(135deg,var(--verde-escuro),var(--verde-fazenda));color:#fff;padding:18px 20px;position:sticky;top:0;z-index:100;box-shadow:var(--sombra);}
+  header h1{font-size:22px;display:flex;align-items:center;gap:10px;}
+  header h1 i{color:#a5d6a7;}
+  .nav-tabs{display:flex;background:#fff;border-bottom:3px solid var(--verde-claro);position:sticky;top:64px;z-index:99;}
+  .nav-tabs button{flex:1;padding:14px;border:none;background:transparent;cursor:pointer;font-size:15px;font-weight:600;color:var(--cinza);transition:.2s;border-bottom:3px solid transparent;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .nav-tabs button.active{color:var(--verde-fazenda);border-bottom-color:var(--verde-fazenda);background:var(--verde-bg);}
+  .nav-tabs button:hover{background:var(--verde-bg);}
+  .container{max-width:1100px;margin:20px auto;padding:0 16px 60px;}
+  .tab-content{display:none;animation:fade .3s;}
+  .tab-content.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .card{background:#fff;border-radius:16px;padding:20px;box-shadow:var(--sombra);margin-bottom:18px;border:1px solid #e0e0e0;}
+  .card h2{color:var(--verde-escuro);font-size:18px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .card h2 i{color:var(--verde-fazenda);}
+  .search-box{display:flex;gap:10px;margin-bottom:16px;}
+  .search-box input{flex:1;padding:12px 14px;border:2px solid #c8e6c9;border-radius:10px;font-size:15px;outline:none;}
+  .search-box input:focus{border-color:var(--verde-fazenda);}
+  .btn{padding:12px 18px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;transition:.2s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-verde{background:var(--verde-fazenda);color:#fff;}
+  .btn-verde:hover{background:var(--verde-escuro);}
+  .btn-vermelho{background:var(--vermelho);color:#fff;}
+  .btn-vermelho:hover{background:#b71c1c;}
+  .btn-cinza{background:#e0e0e0;color:#333;}
+  .btn-cinza:hover{background:#bdbdbd;}
+  .result-list{display:grid;gap:10px;}
+  .result-item{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--verde-bg);border-radius:12px;border-left:4px solid var(--verde-fazenda);}
+  .result-item .info{flex:1;}
+  .result-item .info strong{color:var(--verde-escuro);display:block;font-size:15px;}
+  .result-item .info span{color:var(--cinza);font-size:13px;}
+  .result-item .actions{display:flex;gap:8px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{background:var(--verde-fazenda);color:#fff;padding:12px;text-align:left;font-weight:600;}
+  th:first-child{border-radius:10px 0 0 0;}
+  th:last-child{border-radius:0 10px 0 0;}
+  td{padding:12px;border-bottom:1px solid #e0e0e0;}
+  tr:hover{background:var(--verde-bg);}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+  .form-group label{display:block;font-size:13px;color:var(--cinza);margin-bottom:4px;font-weight:600;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #c8e6c9;border-radius:8px;font-size:14px;outline:none;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--verde-fazenda);}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px;}
+  .modal.active{display:flex;}
+  .modal-content{background:#fff;border-radius:16px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.2);}
+  .modal-content h3{color:var(--verde-escuro);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .badge-entrada{background:#c8e6c9;color:#1b5e20;}
+  .badge-saida{background:#ffcdd2;color:#b71c1c;}
+  .empty{text-align:center;color:var(--cinza);padding:30px;font-style:italic;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 22px;border-radius:10px;z-index:300;opacity:0;transition:.3s;}
+  .toast.show{opacity:1;}
+  .toast.success{background:var(--verde-fazenda);}
+  .toast.error{background:var(--vermelho);}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px;}
+  .stat-card{background:linear-gradient(135deg,var(--verde-fazenda),var(--verde-claro));color:#fff;border-radius:14px;padding:18px;box-shadow:var(--sombra);}
+  .stat-card .label{font-size:13px;opacity:.9;}
+  .stat-card .value{font-size:24px;font-weight:700;margin-top:4px;}
+  .stat-card i{float:right;font-size:28px;opacity:.7;}
+  @media(max-width:600px){
+    .nav-tabs button{font-size:12px;padding:12px 4px;flex-direction:column;gap:4px;}
+    .nav-tabs button i{font-size:18px;}
+    table{font-size:12px;}
+    th,td{padding:8px;}
+  }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>🌱 Nelcir - Gestão de Insumos Agrícolas</h1>
-    <p>Sistema de controle de estoque e busca de produtos</p>
-  </header>
+<header>
+  <h1><i class="fas fa-tractor"></i> Nelcir - Gestão de Insumos</h1>
+</header>
 
-  <nav>
-    <button class="active" onclick="showTab('busca')">🔍 Busca</button>
-    <button onclick="showTab('estoque')">📦 Estoque</button>
-    <button onclick="showTab('log')">📋 Log</button>
-  </nav>
+<div class="nav-tabs">
+  <button class="active" onclick="showTab('busca')"><i class="fas fa-search"></i> Busca / Entrada</button>
+  <button onclick="showTab('estoque')"><i class="fas fa-warehouse"></i> Meu Estoque</button>
+  <button onclick="showTab('historico')"><i class="fas fa-clock-rotate-left"></i> Histórico / Log</button>
+</div>
 
-  <div class="container">
+<div class="container">
 
-    <!-- ABA BUSCA -->
-    <div id="busca" class="tab-content" style="display:block;">
-      <div class="card">
-        <h2>🔍 Buscar Produtos</h2>
-        <div class="search-box">
-          <input type="text" id="campoBusca" placeholder="Digite o nome do produto..." oninput="buscarProdutos()" />
-          <select id="filtroCategoria" onchange="buscarProdutos()">
-            <option value="">Todas categorias</option>
-            <option value="Nativo">Nativo</option>
-            <option value="Roundup">Roundup</option>
-            <option value="Actara">Actara</option>
-            <option value="Score">Score</option>
-            <option value="Vertimec">Vertimec</option>
-            <option value="Bioinsumos">Bioinsumos</option>
-            <option value="Outros">Outros</option>
-          </select>
-        </div>
-        <div id="resultadoBusca">
-          <div class="empty-state">Digite para buscar entre 1000 produtos...</div>
-        </div>
+  <!-- ABA 1: BUSCA / ENTRADA -->
+  <div id="tab-busca" class="tab-content active">
+    <div class="card">
+      <h2><i class="fas fa-magnifying-glass"></i> Buscar Insumos</h2>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Digite o nome do insumo..." onkeyup="if(event.key==='Enter')searchInsumos()">
+        <button class="btn btn-verde" onclick="searchInsumos()"><i class="fas fa-search"></i> Buscar</button>
       </div>
-    </div>
-
-    <!-- ABA ESTOQUE -->
-    <div id="estoque" class="tab-content">
-      <div class="card">
-        <h2>📦 Estoque Atual</h2>
-        <div id="listaEstoque">
-          <div class="loading">Carregando estoque...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ABA LOG -->
-    <div id="log" class="tab-content">
-      <div class="card">
-        <h2>📋 Histórico de Movimentações</h2>
-        <div id="listaLog">
-          <div class="loading">Carregando histórico...</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- MODAL ENTRADA -->
-  <div class="modal-overlay" id="modalEntrada">
-    <div class="modal">
-      <h3>📥 Entrada de Estoque</h3>
-      <div class="info-produto" id="infoProdutoEntrada"></div>
-      <label for="inputQuantidade">Quantidade</label>
-      <input type="number" id="inputQuantidade" min="1" step="1" placeholder="Ex: 10" />
-      <label for="inputPreco">Preço Unitário (R$)</label>
-      <input type="number" id="inputPreco" min="0" step="0.01" placeholder="Ex: 45.90" />
-      <div class="modal-actions">
-        <button class="btn btn-cancelar" onclick="fecharModal('modalEntrada')">Cancelar</button>
-        <button class="btn btn-salvar" onclick="salvarEntrada()">Salvar Entrada</button>
+      <div id="searchResults" class="result-list">
+        <div class="empty">Digite um termo para buscar entre os 1000 insumos cadastrados.</div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL SAIDA -->
-  <div class="modal-overlay" id="modalSaida">
-    <div class="modal">
-      <h3>📤 Saída de Estoque</h3>
-      <div class="info-produto" id="infoProdutoSaida"></div>
-      <label for="inputQuantidadeSaida">Quantidade</label>
-      <input type="number" id="inputQuantidadeSaida" min="1" step="1" placeholder="Ex: 5" />
-      <div class="modal-actions">
-        <button class="btn btn-cancelar" onclick="fecharModal('modalSaida')">Cancelar</button>
-        <button class="btn btn-salvar" onclick="salvarSaida()">Registrar Saída</button>
+  <!-- ABA 2: MEU ESTOQUE -->
+  <div id="tab-estoque" class="tab-content">
+    <div class="stats" id="statsContainer"></div>
+    <div class="card">
+      <h2><i class="fas fa-boxes-stacked"></i> Estoque Atual</h2>
+      <div style="overflow-x:auto;">
+        <table id="estoqueTable">
+          <thead>
+            <tr>
+              <th>Insumo</th><th>Unidade</th><th>Quantidade</th><th>Preço Médio</th><th>Total Investido</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="estoqueBody">
+            <tr><td colspan="6" class="empty">Carregando estoque...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <footer>
-    Nelcir &copy; 2025 - Sistema de Gestão de Insumos Agrícolas
-  </footer>
+  <!-- ABA 3: HISTÓRICO -->
+  <div id="tab-historico" class="tab-content">
+    <div class="card">
+      <h2><i class="fas fa-list-check"></i> Movimentações</h2>
+      <div style="overflow-x:auto;">
+        <table id="historicoTable">
+          <thead>
+            <tr>
+              <th>Data</th><th>Insumo</th><th>Tipo</th><th>Qtd</th><th>Preço Unit.</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="historicoBody">
+            <tr><td colspan="6" class="empty">Carregando histórico...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-  <script>
-    // ============================================================
-    // NAVEGAÇÃO - Função no topo para garantir funcionamento
-    // ============================================================
-    function showTab(tabId) {
-      var abas = ['busca', 'estoque', 'log'];
-      for (var i = 0; i < abas.length; i++) {
-        var el = document.getElementById(abas[i]);
-        if (el) { el.style.display = 'none'; }
-      }
-      var alvo = document.getElementById(tabId);
-      if (alvo) { alvo.style.display = 'block'; }
+</div>
 
-      var botoes = document.querySelectorAll('nav button');
-      botoes.forEach(function(btn) { btn.classList.remove('active'); });
-      event && event.currentTarget && event.currentTarget.classList.add('active');
+<!-- MODAL ENTRADA -->
+<div class="modal" id="modalEntrada">
+  <div class="modal-content">
+    <h3><i class="fas fa-arrow-down-to-bracket"></i> Registrar Entrada</h3>
+    <p style="margin-bottom:14px;color:var(--cinza);" id="modalInsumoNome"></p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input type="number" id="entQtd" min="0.01" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Preço Unitário (R$)</label>
+        <input type="number" id="entPreco" min="0" step="0.01">
+      </div>
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Fornecedor / Observação</label>
+        <input type="text" id="entObs" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cinza" onclick="closeModal('modalEntrada')">Cancelar</button>
+      <button class="btn btn-verde" onclick="confirmarEntrada()"><i class="fas fa-check"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
 
-      if (tabId === 'estoque') { carregarEstoque(); }
-      if (tabId === 'log') { carregarLog(); }
+<!-- MODAL SAÍDA -->
+<div class="modal" id="modalSaida">
+  <div class="modal-content">
+    <h3><i class="fas fa-arrow-up-from-bracket"></i> Registrar Saída</h3>
+    <p style="margin-bottom:14px;color:var(--cinza);" id="saidaInsumoNome"></p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input type="number" id="saiQtd" min="0.01" step="0.01">
+      </div>
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Destino / Observação</label>
+        <input type="text" id="saiObs" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cinza" onclick="closeModal('modalSaida')">Cancelar</button>
+      <button class="btn btn-vermelho" onclick="confirmarSaida()"><i class="fas fa-check"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://fzckjvvdqtyvunwxrbyl.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let insumoSelecionado=null;
+let estoqueSelecionado=null;
+
+/* ===== NAVEGAÇÃO ===== */
+function showTab(nome){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+nome).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(nome==='estoque')loadEstoque();
+  if(nome==='historico')loadHistorico();
+}
+
+/* ===== TOAST ===== */
+function toast(msg,tipo='success'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show '+tipo;
+  setTimeout(()=>el.className='toast',3000);
+}
+
+/* ===== MODAL ===== */
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+
+/* ===== BUSCA ===== */
+async function searchInsumos(){
+  const termo=document.getElementById('searchInput').value.trim();
+  const container=document.getElementById('searchResults');
+  if(!termo){container.innerHTML='<div class="empty">Digite um termo para buscar.</div>';return;}
+  container.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
+  try{
+    const {data,error}=await supabase.from('insumos')
+      .select('*')
+      .ilike('nome','%'+termo+'%')
+      .limit(50);
+    if(error)throw error;
+    if(!data||data.length===0){
+      container.innerHTML='<div class="empty">Nenhum insumo encontrado.</div>';return;
+    }
+    container.innerHTML=data.map(i=>`
+      <div class="result-item">
+        <div class="info">
+          <strong>${i.nome}</strong>
+          <span>${i.unidade||'un'} ${i.categoria?'· '+i.categoria:''}</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-verde" onclick="abrirEntrada(${i.id},'${(i.nome||'').replace(/'/g,"\\'")}')"><i class="fas fa-plus"></i> Entrada</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error(e);
+    container.innerHTML='<div class="empty">Erro ao buscar: '+e.message+'</div>';
+  }
+}
+
+function abrirEntrada(id,nome){
+  insumoSelecionado=id;
+  document.getElementById('modalInsumoNome').textContent=nome;
+  document.getElementById('entQtd').value='';
+  document.getElementById('entPreco').value='';
+  document.getElementById('entObs').value='';
+  openModal('modalEntrada');
+}
+
+/* ===== ENTRADA (UPSERT com preço médio) ===== */
+async function confirmarEntrada(){
+  const qtd=parseFloat(document.getElementById('entQtd').value);
+  const preco=parseFloat(document.getElementById('entPreco').value);
+  const obs=document.getElementById('entObs').value;
+  if(!qtd||qtd<=0){toast('Informe uma quantidade válida.','error');return;}
+  if(!preco||preco<0){toast('Informe um preço válido.','error');return;}
+  if(!insumoSelecionado){toast('Selecione um insumo.','error');return;}
+
+  try{
+    // Busca estoque atual
+    const {data:atual}=await supabase.from('estoque').select('*').eq('insumo_id',insumoSelecionado).maybeSingle();
+
+    let novaQtd=qtd;
+    let novoPrecoMedio=preco;
+    let novoTotal=preco*qtd;
+
+    if(atual){
+      const qtdAtual=parseFloat(atual.quantidade)||0;
+      const totalAtual=parseFloat(atual.total_investido)||0;
+      novaQtd=qtdAtual+qtd;
+      novoTotal=totalAtual+(preco*qtd);
+      novoPrecoMedio=novaQtd>0?novoTotal/novaQtd:0;
     }
 
-    // ============================================================
-    // CONFIGURAÇÃO SUPABASE
-    // ============================================================
-    const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+    // UPSERT estoque
+    const {error:errEst}=await supabase.from('estoque').upsert({
+      insumo_id:insumoSelecionado,
+      quantidade:novaQtd,
+      preco_medio:novoPrecoMedio,
+      total_investido:novoTotal
+    },{onConflict:'insumo_id'});
+    if(errEst)throw errEst;
 
-    let supabaseClient = null;
-    try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } catch (e) {
-      console.error('Erro ao inicializar Supabase:', e);
-    }
-
-    // ============================================================
-    // BASE DE DADOS - 1000 itens simulados
-    // ============================================================
-    const PRODUTOS_BASE = [
-      { nome: 'Nativo', categoria: 'Nativo', principio: 'Trifloxystrobin + Prothioconazol', unidade: 'L' },
-      { nome: 'Roundup', categoria: 'Roundup', principio: 'Glifosato', unidade: 'L' },
-      { nome: 'Roundup Transorb', categoria: 'Roundup', principio: 'Glifosato Potássico', unidade: 'L' },
-      { nome: 'Roundup Ultra', categoria: 'Roundup', principio: 'Glifosato Isopropilamina', unidade: 'L' },
-      { nome: 'Actara', categoria: 'Actara', principio: 'Tiametoxam', unidade: 'kg' },
-      { nome: 'Actara 250 WG', categoria: 'Actara', principio: 'Tiametoxam 250g/kg', unidade: 'kg' },
-      { nome: 'Score', categoria: 'Score', principio: 'Difenoconazol', unidade: 'L' },
-      { nome: 'Vertimec', categoria: 'Vertimec', principio: 'Abamectina', unidade: 'L' },
-      { nome: 'Vertimec 18 EC', categoria: 'Vertimec', principio: 'Abamectina 18g/L', unidade: 'L' },
-      { nome: 'Bacillus subtilis', categoria: 'Bioinsumos', principio: 'Bacillus subtilis', unidade: 'kg' },
-      { nome: 'Trichoderma harzianum', categoria: 'Bioinsumos', principio: 'Trichoderma', unidade: 'kg' },
-      { nome: 'Beauveria bassiana', categoria: 'Bioinsumos', principio: 'Beauveria bassiana', unidade: 'kg' },
-      { nome: 'Metarhizium anisopliae', categoria: 'Bioinsumos', principio: 'Metarhizium', unidade: 'kg' },
-      { nome: 'Azospirillum brasilense', categoria: 'Bioinsumos', principio: 'Azospirillum', unidade: 'L' },
-      { nome: 'Bradyrhizobium', categoria: 'Bioinsumos', principio: 'Bradyrhizobium', unidade: 'dose' }
-    ];
-
-    const FABRICANTES = ['Syngenta', 'Bayer', 'BASF', 'UPL', 'FMC', 'Corteva', 'Adama', 'Nufarm', 'Ouro Fino', 'Biota', 'Koppert', 'Promip'];
-    const EMBALAGENS = ['1L', '5L', '10L', '20L', '100mL', '250mL', '500mL', '1kg', '5kg', '10kg', '25kg', '50g', '100g', '250g'];
-    const CULTURAS = ['Soja', 'Milho', 'Algodão', 'Café', 'Cana', 'Trigo', 'Feijão', 'Hortaliças', 'Frutas', 'Pastagem'];
-
-    function gerarBaseDados() {
-      var dados = [];
-      var contador = 1;
-      var usados = {};
-
-      // Primeiro: produtos base com variações
-      for (var p = 0; p < PRODUTOS_BASE.length; p++) {
-        var prod = PRODUTOS_BASE[p];
-        for (var f = 0; f < FABRICANTES.length; f++) {
-          for (var e = 0; e < EMBALAGENS.length; e++) {
-            if (contador > 1000) break;
-            var cultura = CULTURAS[(contador - 1) % CULTURAS.length];
-            var nomeCompleto = prod.nome + ' ' + FABRICANTES[f] + ' ' + EMBALAGENS[e];
-            if (usados[nomeCompleto]) { continue; }
-            usados[nomeCompleto] = true;
-            dados.push({
-              id: contador,
-              nome: nomeCompleto,
-              categoria: prod.categoria,
-              principio_ativo: prod.principio,
-              fabricante: FABRICANTES[f],
-              embalagem: EMBALAGENS[e],
-              cultura: cultura,
-              unidade: prod.unidade,
-              registro: '0000' + (contador % 9000 + 1000)
-            });
-            contador++;
-          }
-          if (contador > 1000) break;
-        }
-        if (contador > 1000) break;
-      }
-
-      // Completar até 1000 se faltar
-      while (dados.length < 1000) {
-        var prodIdx = dados.length % PRODUTOS_BASE.length;
-        var prod = PRODUTOS_BASE[prodIdx];
-        var fab = FABRICANTES[dados.length % FABRICANTES.length];
-        var emb = EMBALAGENS[dados.length % EMBALAGENS.length];
-        var cult = CULTURAS[dados.length % CULTURAS.length];
-        var nomeCompleto = prod.nome + ' ' + fab + ' ' + emb + ' v' + (dados.length + 1);
-        dados.push({
-          id: dados.length + 1,
-          nome: nomeCompleto,
-          categoria: prod.categoria,
-          principio_ativo: prod.principio,
-          fabricante: fab,
-          embalagem: emb,
-          cultura: cult,
-          unidade: prod.unidade,
-          registro: '0000' + ((dados.length + 1) % 9000 + 1000)
-        });
-      }
-
-      return dados.slice(0, 1000);
-    }
-
-    const BASE_DADOS = gerarBaseDados();
-
-    // ============================================================
-    // VARIÁVEIS GLOBAIS
-    // ============================================================
-    let produtoSelecionado = null;
-    let estoqueItemSelecionado = null;
-
-    // ============================================================
-    // BUSCA LOCAL INSTANTÂNEA
-    // ============================================================
-    function buscarProdutos() {
-      var termo = (document.getElementById('campoBusca').value || '').toLowerCase().trim();
-      var categoria = document.getElementById('filtroCategoria').value;
-      var container = document.getElementById('resultadoBusca');
-
-      var resultados = BASE_DADOS.filter(function(item) {
-        var matchTermo = true;
-        if (termo) {
-          matchTermo = item.nome.toLowerCase().indexOf(termo) !== -1 ||
-                       item.principio_ativo.toLowerCase().indexOf(termo) !== -1 ||
-                       item.fabricante.toLowerCase().indexOf(termo) !== -1;
-        }
-        var matchCategoria = true;
-        if (categoria) {
-          matchCategoria = item.categoria === categoria;
-        }
-        return matchTermo && matchCategoria;
-      });
-
-      if (resultados.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nenhum produto encontrado.</div>';
-        return;
-      }
-
-      var limite = Math.min(resultados.length, 100);
-      var html = '<table><thead><tr>' +
-        '<th>Produto</th><th>Categoria</th><th>Princípio Ativo</th><th>Fabricante</th><th>Embalagem</th><th>Cultura</th><th>Ação</th>' +
-        '</tr></thead><tbody>';
-
-      for (var i = 0; i < limite; i++) {
-        var item = resultados[i];
-        var badgeClass = 'badge-outro';
-        var cat = item.categoria.toLowerCase();
-        if (cat === 'nativo') badgeClass = 'badge-nativo';
-        else if (cat === 'roundup') badgeClass = 'badge-roundup';
-        else if (cat === 'actara') badgeClass = 'badge-actara';
-        else if (cat === 'score') badgeClass = 'badge-score';
-        else if (cat === 'vertimec') badgeClass = 'badge-vertimec';
-        else if (cat === 'bioinsumos') badgeClass = 'badge-bioinsumo';
-
-        html += '<tr>' +
-          '<td>' + item.nome + '</td>' +
-          '<td><span class="badge ' + badgeClass + '">' + item.categoria + '</span></td>' +
-          '<td>' + item.principio_ativo + '</td>' +
-          '<td>' + item.fabricante + '</td>' +
-          '<td>' + item.embalagem + '</td>' +
-          '<td>' + item.cultura + '</td>' +
-          '<td><button class="btn btn-entrada" onclick="abrirModalEntrada(' + item.id + ')">Entrada</button></td>' +
-          '</tr>';
-      }
-
-      if (resultados.length > 100) {
-        html += '<tr><td colspan="7" style="text-align:center; color:#888;">Mostrando 100 de ' + resultados.length + ' resultados. Refine sua busca.</td></tr>';
-      }
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    // ============================================================
-    // MODAL ENTRADA
-    // ============================================================
-    function abrirModalEntrada(produtoId) {
-      produtoSelecionado = BASE_DADOS.find(function(p) { return p.id === produtoId; });
-      if (!produtoSelecionado) { alert('Produto não encontrado!'); return; }
-
-      document.getElementById('infoProdutoEntrada').innerHTML =
-        '<strong>Produto:</strong> ' + produtoSelecionado.nome + '<br>' +
-        '<strong>Categoria:</strong> ' + produtoSelecionado.categoria + '<br>' +
-        '<strong>Unidade:</strong> ' + produtoSelecionado.unidade;
-      document.getElementById('inputQuantidade').value = '';
-      document.getElementById('inputPreco').value = '';
-      document.getElementById('modalEntrada').classList.add('active');
-    }
-
-    function fecharModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
-
-    async function salvarEntrada() {
-      if (!produtoSelecionado) { alert('Nenhum produto selecionado!'); return; }
-      var quantidade = parseFloat(document.getElementById('inputQuantidade').value);
-      var preco = parseFloat(document.getElementById('inputPreco').value);
-
-      if (!quantidade || quantidade <= 0) { alert('Informe uma quantidade válida!'); return; }
-      if (!preco || preco < 0) { alert('Informe um preço válido!'); return; }
-
-      try {
-        var registro = {
-          produto_nome: produtoSelecionado.nome,
-          produto_id: produtoSelecionado.id,
-          categoria: produtoSelecionado.categoria,
-          principio_ativo: produtoSelecionado.principio_ativo,
-          fabricante: produtoSelecionado.fabricante,
-          unidade: produtoSelecionado.unidade,
-          quantidade: quantidade,
-          preco_unitario: preco,
-          tipo: 'entrada',
-          data_movimento: new Date().toISOString()
-        };
-
-        var { data, error } = await supabaseClient.from('estoque').insert([registro]);
-        if (error) throw error;
-
-        alert('Entrada registrada com sucesso!');
-        fecharModal('modalEntrada');
-        produtoSelecionado = null;
-      } catch (err) {
-        console.error('Erro ao salvar entrada:', err);
-        alert('Erro ao salvar entrada: ' + (err.message || 'Verifique a tabela "estoque" no Supabase.'));
-      }
-    }
-
-    // ============================================================
-    // CARREGAR ESTOQUE
-    // ============================================================
-    async function carregarEstoque() {
-      var container = document.getElementById('listaEstoque');
-      container.innerHTML = '<div class="loading">Carregando estoque...</div>';
-
-      try {
-        var { data, error } = await supabaseClient
-          .from('estoque')
-          .select('*')
-          .order('data_movimento', { ascending: false });
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div class="empty-state">Nenhum item em estoque. Registre entradas na aba Busca.</div>';
-          return;
-        }
-
-        // Agrupar por produto_nome
-        var agrupado = {};
-        for (var i = 0; i < data.length; i++) {
-          var row = data[i];
-          var key = row.produto_nome || row.produto_id;
-          if (!agrupado[key]) {
-            agrupado[key] = {
-              produto_nome: row.produto_nome,
-              categoria: row.categoria,
-              principio_ativo: row.principio_ativo,
-              fabricante: row.fabricante,
-              unidade: row.unidade,
-              saldo: 0,
-              valorTotal: 0,
-              totalQtdEntrada: 0,
-              registros: []
-            };
-          }
-          if (row.tipo === 'entrada') {
-            agrupado[key].saldo += parseFloat(row.quantidade) || 0;
-            agrupado[key].valorTotal += (parseFloat(row.quantidade) || 0) * (parseFloat(row.preco_unitario) || 0);
-            agrupado[key].totalQtdEntrada += parseFloat(row.quantidade) || 0;
-          } else if (row.tipo === 'saida') {
-            agrupado[key].saldo -= parseFloat(row.quantidade) || 0;
-          }
-          agrupado[key].registros.push(row);
-        }
-
-        var itensComSaldo = [];
-        for (var k in agrupado) {
-          if (agrupado[k].saldo > 0) {
-            agrupado[k].precoMedio = agrupado[k].totalQtdEntrada > 0
-              ? agrupado[k].valorTotal / agrupado[k].totalQtdEntrada
-              : 0;
-            itensComSaldo.push(agrupado[k]);
-          }
-        }
-
-        if (itensComSaldo.length === 0) {
-          container.innerHTML = '<div class="empty-state">Nenhum item com saldo positivo em estoque.</div>';
-          return;
-        }
-
-        var html = '<table><thead><tr>' +
-          '<th>Produto</th><th>Categoria</th><th>Princípio Ativo</th><th>Fabricante</th><th>Saldo</th><th>Preço Médio</th><th>Ação</th>' +
-          '</tr></thead><tbody>';
-
-        for (var j = 0; j < itensComSaldo.length; j++) {
-          var item = itensComSaldo[j];
-          html += '<tr>' +
-            '<td>' + item.produto_nome + '</td>' +
-            '<td>' + (item.categoria || '-') + '</td>' +
-            '<td>' + (item.principio_ativo || '-') + '</td>' +
-            '<td>' + (item.fabricante || '-') + '</td>' +
-            '<td class="saldo-box">' + item.saldo.toFixed(2) + ' ' + (item.unidade || '') + '</td>' +
-            '<td class="preco-box">R$ ' + item.precoMedio.toFixed(2) + '</td>' +
-            '<td><button class="btn btn-saida" onclick="abrirModalSaida(\'' + item.produto_nome.replace(/'/g, "\\'") + '\')">Saída</button></td>' +
-            '</tr>';
-        }
-
-        html += '</tbody></table>';
-        container.innerHTML = html;
-
-        // Guardar itens agrupados para uso no modal de saída
-        window._estoqueAgrupado = agrupado;
-
-      } catch (err) {
-        console.error('Erro ao carregar estoque:', err);
-        container.innerHTML = '<div class="empty-state">Erro ao carregar estoque: ' + (err.message || '') + '</div>';
-      }
-    }
-
-    // ============================================================
-    // MODAL SAÍDA
-    // ============================================================
-    function abrirModalSaida(produtoNome) {
-      var agrupado = window._estoqueAgrupado || {};
-      var item = agrupado[produtoNome];
-      if (!item) { alert('Item não encontrado no estoque!'); return; }
-
-      estoqueItemSelecionado = item;
-      document.getElementById('infoProdutoSaida').innerHTML =
-        '<strong>Produto:</strong> ' + item.produto_nome + '<br>' +
-        '<strong>Saldo atual:</strong> ' + item.saldo.toFixed(2) + ' ' + (item.unidade || '') + '<br>' +
-        '<strong>Preço médio:</strong> R$ ' + item.precoMedio.toFixed(2);
-      document.getElementById('inputQuantidadeSaida').value = '';
-      document.getElementById('inputQuantidadeSaida').max = item.saldo;
-      document.getElementById('modalSaida').classList.add('active');
-    }
-
-    async function salvarSaida() {
-      if (!estoqueItemSelecionado) { alert('Nenhum item selecionado!'); return; }
-      var quantidade = parseFloat(document.getElementById('inputQuantidadeSaida').value);
-
-      if (!quantidade || quantidade <= 0) { alert('Informe uma quantidade válida!'); return; }
-      if (quantidade > estoqueItemSelecionado.saldo) {
-        alert('Quantidade maior que o saldo disponível!');
-        return;
-      }
-
-      try {
-        var registro = {
-          produto_nome: estoqueItemSelecionado.produto_nome,
-          categoria: estoqueItemSelecionado.categoria,
-          principio_ativo: estoqueItemSelecionado.principio_ativo,
-          fabricante: estoqueItemSelecionado.fabricante,
-          unidade: estoqueItemSelecionado.unidade,
-          quantidade: quantidade,
-          preco_unitario: estoqueItemSelecionado.precoMedio,
-          tipo: 'saida',
-          data_movimento: new Date().toISOString()
-        };
-
-        var { data, error } = await supabaseClient.from('estoque').insert([registro]);
-        if (error) throw error;
-
-        alert('Saída registrada com sucesso!');
-        fecharModal('modalSaida');
-        estoqueItemSelecionado = null;
-        carregarEstoque();
-      } catch (err) {
-        console.error('Erro ao salvar saída:', err);
-        alert('Erro ao registrar saída: ' + (err.message || ''));
-      }
-    }
-
-    // ============================================================
-    // CARREGAR LOG
-    // ============================================================
-    async function carregarLog() {
-      var container = document.getElementById('listaLog');
-      container.innerHTML = '<div class="loading">Carregando histórico...</div>';
-
-      try {
-        var { data, error } = await supabaseClient
-          .from('estoque')
-          .select('*')
-          .order('data_movimento', { ascending: false });
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div class="empty-state">Nenhuma movimentação registrada.</div>';
-          return;
-        }
-
-        var html = '<table><thead><tr>' +
-          '<th>Data/Hora</th><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Preço Unit.</th><th>Unidade</th>' +
-          '</tr></thead><tbody>';
-
-        for (var i = 0; i < data.length; i++) {
-          var row = data[i];
-          var dataFormatada = row.data_movimento
-            ? new Date(row.data_movimento).toLocaleString('pt-BR')
-            : '-';
-          var tipoLabel = row.tipo === 'entrada'
-            ? '<span style="color:var(--verde-escuro);font-weight:700;">📥 Entrada</span>'
-            : '<span style="color:var(--vermelho);font-weight:700;">📤 Saída</span>';
-          var preco = row.preco_unitario != null ? 'R$ ' + parseFloat(row.preco_unitario).toFixed(2) : '-';
-
-          html += '<tr>' +
-            '<td>' + dataFormatada + '</td>' +
-            '<td>' + (row.produto_nome || '-') + '</td>' +
-            '<td>' + tipoLabel + '</td>' +
-            '<td>' + (parseFloat(row.quantidade) || 0) + '</td>' +
-            '<td>' + preco + '</td>' +
-            '<td>' + (row.unidade || '-') + '</td>' +
-            '</tr>';
-        }
-
-        html += '</tbody></table>';
-        container.innerHTML = html;
-
-      } catch (err) {
-        console.error('Erro ao carregar log:', err);
-        container.innerHTML = '<div class="empty-state">Erro ao carregar histórico: ' + (err.message || '') + '</div>';
-      }
-    }
-
-    // ============================================================
-    // INICIALIZAÇÃO
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-      buscarProdutos();
+    // Registra movimentação
+    const {error:errMov}=await supabase.from('movimentacoes').insert({
+      insumo_id:insumoSelecionado,
+      tipo:'entrada',
+      quantidade:qtd,
+      preco_unitario:preco,
+      total_investido:preco*qtd,
+      observacao:obs
     });
-  </script>
+    if(errMov)throw errMov;
+
+    toast('Entrada registrada com sucesso!');
+    closeModal('modalEntrada');
+    searchInsumos();
+  }catch(e){
+    console.error(e);
+    toast('Erro: '+e.message,'error');
+  }
+}
+
+/* ===== SAÍDA ===== */
+function abrirSaida(id,nome,qtdAtual){
+  estoqueSelecionado=id;
+  document.getElementById('saidaInsumoNome').textContent=nome+' (Disponível: '+qtdAtual+')';
+  document.getElementById('saiQtd').value='';
+  document.getElementById('saiQtd').max=qtdAtual;
+  document.getElementById('saiObs').value='';
+  openModal('modalSaida');
+}
+
+async function confirmarSaida(){
+  const qtd=parseFloat(document.getElementById('saiQtd').value);
+  const obs=document.getElementById('saiObs').value;
+  if(!qtd||qtd<=0){toast('Informe uma quantidade válida.','error');return;}
+  if(!estoqueSelecionado){toast('Selecione um item.','error');return;}
+
+  try{
+    const {data:atual}=await supabase.from('estoque').select('*').eq('insumo_id',estoqueSelecionado).maybeSingle();
+    if(!atual){toast('Item não encontrado no estoque.','error');return;}
+    const qtdAtual=parseFloat(atual.quantidade)||0;
+    if(qtd>qtdAtual){toast('Quantidade superior ao disponível.','error');return;}
+
+    const novaQtd=qtdAtual-qtd;
+    const precoMedio=parseFloat(atual.preco_medio)||0;
+    const novoTotal=novaQtd*precoMedio;
+
+    const {error:errEst}=await supabase.from('estoque').update({
+      quantidade:novaQtd,
+      total_investido:novoTotal
+    }).eq('insumo_id',estoqueSelecionado);
+    if(errEst)throw errEst;
+
+    const {error:errMov}=await supabase.from('movimentacoes').insert({
+      insumo_id:estoqueSelecionado,
+      tipo:'saida',
+      quantidade:qtd,
+      preco_unitario:precoMedio,
+      total_investido:precoMedio*qtd,
+      observacao:obs
+    });
+    if(errMov)throw errMov;
+
+    toast('Saída registrada com sucesso!');
+    closeModal('modalSaida');
+    loadEstoque();
+  }catch(e){
+    console.error(e);
+    toast('Erro: '+e.message,'error');
+  }
+}
+
+/* ===== ESTOQUE ===== */
+async function loadEstoque(){
+  const body=document.getElementById('estoqueBody');
+  body.innerHTML='<tr><td colspan="6" class="empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
+  try{
+    const {data,error}=await supabase.from('estoque')
+      .select('*, insumos(nome,unidade,categoria)')
+      .order('insumos(nome)',{ascending:true});
+    if(error)throw error;
+    if(!data||data.length===0){
+      body.innerHTML='<tr><td colspan="6" class="empty">Nenhum item em estoque.</td></tr>';
+      document.getElementById('statsContainer').innerHTML='';
+      return;
+    }
+    body.innerHTML=data.map(e=>{
+      const nome=e.insumos?e.insumos.nome:'Insumo #'+e.insumo_id;
+      const un=e.insumos?e.insumos.unidade:'';
+      const qtd=parseFloat(e.quantidade)||0;
+      const pm=parseFloat(e.preco_medio)||0;
+      const tot=parseFloat(e.total_investido)||0;
+      return `<tr>
+        <td><strong>${nome}</strong></td>
+        <td>${un}</td>
+        <td>${qtd}</td>
+        <td>R$ ${pm.toFixed(2)}</td>
+        <td>R$ ${tot.toFixed(2)}</td>
+        <td><button class="btn btn-vermelho" onclick="abrirSaida(${e.insumo_id},'${nome.replace(/'/g,"\\'")}',${qtd})"><i class="fas fa-minus"></i> Saída</button></td>
+      </tr>`;
+    }).join('');
+
+    // Stats
+    const totalItens=data.length;
+    const totalInvestido=data.reduce((s,e)=>s+(parseFloat(e.total_investido)||0),0);
+    const totalQtd=data.reduce((s,e)=>s+(parseFloat(e.quantidade)||0),0);
+    document.getElementById('statsContainer').innerHTML=`
+      <div class="stat-card"><i class="fas fa-boxes-stacked"></i><div class="label">Itens em Estoque</div><div class="value">${totalItens}</div></div>
+      <div class="stat-card"><i class="fas fa-scale-balanced"></i><div class="label">Quantidade Total</div><div class="value">${totalQtd.toFixed(2)}</div></div>
+      <div class="stat-card"><i class="fas fa-sack-dollar"></i><div class="label">Total Investido</div><div class="value">R$ ${totalInvestido.toFixed(2)}</div></div>
+    `;
+  }catch(e){
+    console.error(e);
+    body.innerHTML='<tr><td colspan="6" class="empty">Erro: '+e.message+'</td></tr>';
+  }
+}
+
+/* ===== HISTÓRICO ===== */
+async function loadHistorico(){
+  const body=document.getElementById('historicoBody');
+  body.innerHTML='<tr><td colspan="6" class="empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
+  try{
+    const {data,error}=await supabase.from('movimentacoes')
+      .select('*, insumos(nome,unidade)')
+      .order('created_at',{ascending:false})
+      .limit(200);
+    if(error)throw error;
+    if(!data||data.length===0){
+      body.innerHTML='<tr><td colspan="6" class="empty">Nenhuma movimentação registrada.</td></tr>';
+      return;
+    }
+    body.innerHTML=data.map(m=>{
+      const nome=m.insumos?m.insumos.nome:'Insumo #'+m.insumo_id;
+      const data=m.created_at?new Date(m.created_at).toLocaleString('pt-BR'):'-';
+      const qtd=parseFloat(m.quantidade)||0;
+      const pu=parseFloat(m.preco_unitario)||0;
+      const tot=parseFloat(m.total_investido)||0;
+      const badge=m.tipo==='entrada'?'<span class="badge badge-entrada">Entrada</span>':'<span class="badge badge-saida">Saída</span>';
+      return `<tr>
+        <td>${data}</td>
+        <td>${nome}</td>
+        <td>${badge}</td>
+        <td>${qtd}</td>
+        <td>R$ ${pu.toFixed(2)}</td>
+        <td>R$ ${tot.toFixed(2)}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    console.error(e);
+    body.innerHTML='<tr><td colspan="6" class="empty">Erro: '+e.message+'</td></tr>';
+  }
+}
+
+/* ===== INIT ===== */
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('searchInput').focus();
+});
+</script>
 </body>
 </html>
