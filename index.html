@@ -3,284 +3,856 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nelcir - Produtos Técnicos Agrícolas</title>
+  <title>Nelcir - Gestão de Estoque</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --verde-fazenda: #2e7d32;
-      --verde-escuro: #1b5e20;
-      --verde-claro: #66bb6a;
-      --verde-bg: #f1f8e9;
-      --texto: #1f2937;
-      --cinza: #6b7280;
-      --borda: #d1d5db;
+      --verde-escuro: #1b4332;
+      --verde-meio: #2d6a4f;
+      --verde-claro: #40916c;
+      --verde-suave: #52b788;
+      --verde-bg: #d8f3dc;
+      --verde-card: #e9f5ee;
       --branco: #ffffff;
+      --texto: #1b2d24;
+      --cinza: #6c757d;
+      --vermelho: #c1121f;
+      --amarelo: #e9c46a;
+      --sombra: 0 4px 14px rgba(27, 67, 50, 0.15);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: var(--verde-bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--verde-bg) 0%, #f0fff4 100%);
       color: var(--texto);
-      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 40px;
     }
 
     header {
-      background: var(--verde-fazenda);
+      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-meio));
       color: var(--branco);
-      padding: 18px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      padding: 22px 20px;
+      box-shadow: var(--sombra);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    header h1 { font-size: 24px; font-weight: 700; }
-    header p { font-size: 13px; opacity: 0.9; margin-top: 2px; }
-
-    nav {
-      background: var(--verde-escuro);
+    header h1 {
+      font-size: 1.6rem;
       display: flex;
-      gap: 4px;
-      padding: 0 20px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 24px 0 20px;
       flex-wrap: wrap;
     }
 
-    nav button {
-      background: transparent;
-      color: var(--branco);
+    .tab-btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 14px 18px;
       border: none;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-size: 14px;
+      background: var(--branco);
+      color: var(--verde-escuro);
+      font-size: 1rem;
       font-weight: 600;
-      transition: background 0.2s;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: var(--sombra);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    nav button:hover { background: rgba(255,255,255,0.15); }
-    nav button.active { background: var(--verde-fazenda); border-bottom: 3px solid var(--verde-claro); }
+    .tab-btn:hover {
+      background: var(--verde-bg);
+      transform: translateY(-2px);
+    }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--verde-meio), var(--verde-claro));
+      color: var(--branco);
+    }
 
     .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--branco);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: var(--sombra);
+      margin-bottom: 20px;
+      border: 1px solid #e3e8e5;
+    }
+
+    .card h2 {
+      color: var(--verde-escuro);
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
     .search-box {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
     .search-box input {
       flex: 1;
-      min-width: 240px;
-      padding: 12px 14px;
-      border: 1px solid var(--borda);
-      border-radius: 6px;
-      font-size: 15px;
-      outline: none;
+      min-width: 200px;
+      padding: 12px 16px;
+      border: 2px solid var(--verde-bg);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border 0.2s;
     }
 
-    .search-box input:focus { border-color: var(--verde-fazenda); box-shadow: 0 0 0 2px rgba(46,125,50,0.2); }
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+    }
 
-    .search-box button {
-      background: var(--verde-fazenda);
-      color: var(--branco);
+    .btn {
+      padding: 12px 20px;
       border: none;
-      padding: 12px 22px;
-      border-radius: 6px;
-      font-size: 15px;
+      border-radius: 10px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .search-box button:hover { background: var(--verde-escuro); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--verde-meio), var(--verde-claro));
+      color: var(--branco);
+    }
 
-    #searchResults { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--sombra); }
 
-    .card {
+    .btn-danger {
+      background: var(--vermelho);
+      color: var(--branco);
+    }
+
+    .btn-danger:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background: var(--verde-bg);
+      color: var(--verde-escuro);
+    }
+
+    .btn-secondary:hover { background: #c5ebd2; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #eef3f0;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: var(--verde-bg);
+      color: var(--verde-escuro);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    tr:hover { background: var(--verde-card); }
+
+    .table-scroll {
+      max-height: 480px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid #e3e8e5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge-ok { background: var(--verde-suave); color: var(--branco); }
+    .badge-low { background: var(--amarelo); color: #5a4a1a; }
+    .badge-out { background: var(--vermelho); color: var(--branco); }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(27, 67, 50, 0.55);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
       background: var(--branco);
-      border: 1px solid var(--borda);
-      border-left: 4px solid var(--verde-fazenda);
-      border-radius: 8px;
-      padding: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s ease;
     }
 
-    .card h3 { color: var(--verde-escuro); font-size: 16px; margin-bottom: 6px; }
-    .card .tipo { display: inline-block; background: var(--verde-bg); color: var(--verde-escuro); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px; text-transform: uppercase; }
-    .card p { font-size: 13px; color: var(--cinza); margin-bottom: 4px; }
-    .card .dose { font-size: 13px; color: var(--texto); font-weight: 600; }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
 
-    .empty { text-align: center; color: var(--cinza); padding: 30px; font-size: 14px; }
+    .modal h3 {
+      color: var(--verde-escuro);
+      margin-bottom: 6px;
+      font-size: 1.2rem;
+    }
 
-    .info-box { background: var(--branco); border: 1px solid var(--borda); border-radius: 8px; padding: 18px; }
-    .info-box h2 { color: var(--verde-escuro); margin-bottom: 10px; font-size: 18px; }
-    .info-box ul { margin-left: 20px; }
-    .info-box li { margin-bottom: 6px; font-size: 14px; }
+    .modal .sub {
+      color: var(--cinza);
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+    }
 
-    footer { text-align: center; padding: 20px; color: var(--cinza); font-size: 12px; margin-top: 30px; }
+    .form-group { margin-bottom: 16px; }
 
-    @media (max-width: 600px) {
-      header h1 { font-size: 20px; }
-      nav button { padding: 10px 12px; font-size: 13px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--verde-escuro);
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid var(--verde-bg);
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .modal-actions .btn { flex: 1; justify-content: center; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 14px 22px;
+      border-radius: 10px;
+      color: var(--branco);
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      max-width: 340px;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--verde-meio); }
+    .toast.error { background: var(--vermelho); }
+    .toast.info { background: #264653; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--cinza);
+    }
+
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--verde-meio), var(--verde-claro));
+      color: var(--branco);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: var(--sombra);
+    }
+
+    .stat-card .label { font-size: 0.8rem; opacity: 0.9; }
+    .stat-card .value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+
+    .row-actions { display: flex; gap: 6px; }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: var(--verde-meio);
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .tab-btn { min-width: 100px; font-size: 0.85rem; padding: 12px 10px; }
+      header h1 { font-size: 1.3rem; }
+      th, td { padding: 10px 8px; font-size: 0.82rem; }
     }
   </style>
 </head>
 <body>
-
   <header>
-    <h1>Nelcir</h1>
-    <p>Consulta de Produtos Técnicos Agrícolas</p>
+    <h1>🌿 Nelcir - Gestão de Estoque</h1>
+    <p>Controle de insumos, entradas e saídas</p>
   </header>
 
-  <nav>
-    <button class="active" onclick="showTab('busca', event)">Busca</button>
-    <button onclick="showTab('info', event)">Informações</button>
-  </nav>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="busca" onclick="switchTab('busca')">🔍 Busca / Entrada</button>
+      <button class="tab-btn" data-tab="estoque" onclick="switchTab('estoque')">📦 Meu Estoque</button>
+      <button class="tab-btn" data-tab="log" onclick="switchTab('log')">📋 Log</button>
+    </div>
 
-  <main>
-    <!-- TAB BUSCA -->
-    <section id="tab-busca" class="tab-content active">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Digite o nome do produto (ex: Nativo, Actara, Roundup)..." onkeyup="searchProducts()" />
-        <button onclick="searchProducts()">Buscar</button>
+    <!-- ABA BUSCA / ENTRADA -->
+    <div id="tab-busca" class="tab-content active">
+      <div class="card">
+        <h2>🔍 Buscar Insumos</h2>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Digite o nome do insumo..." oninput="debounceSearch()" />
+          <button class="btn btn-primary" onclick="searchInsumos()">Buscar</button>
+        </div>
+        <div id="searchResults">
+          <div class="empty-state">
+            <div class="icon">🌱</div>
+            <p>Digite acima para buscar entre os 1000 insumos cadastrados.</p>
+          </div>
+        </div>
       </div>
-      <div id="searchResults"></div>
-    </section>
+    </div>
 
-    <!-- TAB INFO -->
-    <section id="tab-info" class="tab-content">
-      <div class="info-box">
-        <h2>Sobre o Nelcir</h2>
-        <p style="margin-bottom:12px;font-size:14px;">
-          Sistema de consulta rápida de produtos técnicos agrícolas. Use a aba <strong>Busca</strong> para encontrar produtos por nome.
-        </p>
-        <h2 style="margin-top:16px;">Como usar</h2>
-        <ul>
-          <li>Digite o nome ou parte do nome do produto.</li>
-          <li>Os resultados aparecem automaticamente.</li>
-          <li>Clique em Buscar para confirmar a pesquisa.</li>
-        </ul>
+    <!-- ABA MEU ESTOQUE -->
+    <div id="tab-estoque" class="tab-content">
+      <div class="stats" id="statsContainer"></div>
+      <div class="card">
+        <h2>📦 Meu Estoque</h2>
+        <div class="search-box">
+          <input type="text" id="estoqueFilter" placeholder="Filtrar meu estoque..." oninput="renderEstoque()" />
+          <button class="btn btn-secondary" onclick="loadEstoque()">🔄 Atualizar</button>
+        </div>
+        <div id="estoqueResults"></div>
       </div>
-    </section>
-  </main>
+    </div>
 
-  <footer>
-    Nelcir &copy; 2025 - Produtos Técnicos Agrícolas
-  </footer>
+    <!-- ABA LOG -->
+    <div id="tab-log" class="tab-content">
+      <div class="card">
+        <h2>📋 Histórico de Movimentações</h2>
+        <div class="search-box">
+          <button class="btn btn-secondary" onclick="loadLogs()">🔄 Atualizar Log</button>
+        </div>
+        <div id="logResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ENTRADA -->
+  <div class="modal-overlay" id="modalEntrada">
+    <div class="modal">
+      <h3>📥 Entrada de Estoque</h3>
+      <div class="sub" id="entradaSub"></div>
+      <div class="form-group">
+        <label for="entradaQtd">Quantidade</label>
+        <input type="number" id="entradaQtd" min="0.01" step="0.01" placeholder="Ex: 10" />
+      </div>
+      <div class="form-group">
+        <label for="entradaPreco">Preço Pago (R$)</label>
+        <input type="number" id="entradaPreco" min="0" step="0.01" placeholder="Ex: 25.50" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modalEntrada')">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmEntrada()">Confirmar Entrada</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SAÍDA -->
+  <div class="modal-overlay" id="modalSaida">
+    <div class="modal">
+      <h3>📤 Saída / Utilização</h3>
+      <div class="sub" id="saidaSub"></div>
+      <div class="form-group">
+        <label for="saidaQtd">Quantidade Utilizada</label>
+        <input type="number" id="saidaQtd" min="0.01" step="0.01" placeholder="Ex: 2" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modalSaida')">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmSaida()">Confirmar Saída</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
   <script>
-    // ===== NAVEGAÇÃO (topo absoluto) =====
-    function showTab(tabName, event) {
-      var tabs = document.querySelectorAll('.tab-content');
-      for (var i = 0; i < tabs.length; i++) {
-        tabs[i].classList.remove('active');
-      }
-      var buttons = document.querySelectorAll('nav button');
-      for (var j = 0; j < buttons.length; j++) {
-        buttons[j].classList.remove('active');
-      }
-      var target = document.getElementById('tab-' + tabName);
-      if (target) target.classList.add('active');
-      if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let searchTimer = null;
+    let currentInsumo = null;
+    let currentEstoqueItem = null;
+    let estoqueCache = [];
+    let logsCache = [];
+
+    // ---------- NAVEGAÇÃO ----------
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'estoque') loadEstoque();
+      if (tab === 'log') loadLogs();
     }
 
-    // ===== BASE DE DADOS LOCAL =====
-    var BASE_DADOS = [
-      { nome: 'Nativo', tipo: 'Fungicida', principio: 'Trifloxistrobina + Tebuconazol', dose: '0,3 a 0,5 L/ha', cultura: 'Soja, Trigo', praga: 'Ferrugem, Manchas' },
-      { nome: 'Actara', tipo: 'Inseticida', principio: 'Tiametoxam', dose: '100 a 200 g/ha', cultura: 'Soja, Batata, Tomate', praga: 'Tripes, Pulgões, Percevejos' },
-      { nome: 'Roundup', tipo: 'Herbicida', principio: 'Glifosato', dose: '1,5 a 4,0 L/ha', cultura: 'Diversas', praga: 'Plantas Daninhas' },
-      { nome: 'Vertimec', tipo: 'Acaricida', principio: 'Abamectina', dose: '0,5 a 1,0 L/ha', cultura: 'Citros, Hortaliças', praga: 'Ácaros, Minadores' },
-      { nome: 'Priori', tipo: 'Fungicida', principio: 'Azoxistrobina + Ciproconazol', dose: '0,3 a 0,5 L/ha', cultura: 'Soja, Milho', praga: 'Ferrugem, Antracnose' },
-      { nome: 'Engeo Pleno', tipo: 'Inseticida', principio: 'Tiametoxam + Lambda-cialotrina', dose: '0,15 a 0,25 L/ha', cultura: 'Soja, Algodão', praga: 'Percevejos, Lagartas' },
-      { nome: 'Glizmax', tipo: 'Herbicida', principio: 'Glifosato', dose: '1,0 a 4,0 L/ha', cultura: 'Diversas', praga: 'Plantas Daninhas' },
-      { nome: 'Karate Zeon', tipo: 'Inseticida', principio: 'Lambda-cialotrina', dose: '0,1 a 0,3 L/ha', cultura: 'Soja, Milho, Algodão', praga: 'Lagartas, Percevejos' },
-      { nome: 'Belt', tipo: 'Inseticida', principio: 'Flubendiamida', dose: '0,03 a 0,08 L/ha', cultura: 'Soja, Algodão', praga: 'Lagartas' },
-      { nome: 'Score', tipo: 'Fungicida', principio: 'Difeconazol', dose: '0,3 a 0,5 L/ha', cultura: 'Soja, Citros', praga: 'Ferrugem, Verrugose' }
-    ];
-
-    // ===== SUPABASE (inicialização segura) =====
-    var SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
-    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
-    var supabaseClient = null;
-
-    try {
-      if (window.supabase && window.supabase.createClient) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      }
-    } catch (e) {
-      console.warn('Supabase não inicializado. Usando base local.', e);
+    // ---------- TOAST ----------
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    // ===== BUSCA =====
-    function searchProducts() {
-      var input = document.getElementById('searchInput');
-      var termo = input ? input.value.trim().toLowerCase() : '';
-      var container = document.getElementById('searchResults');
+    // ---------- MODAL ----------
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-      // Limpa resultados anteriores
-      container.innerHTML = '';
+    // ---------- BUSCA DE INSUMOS ----------
+    function debounceSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => searchInsumos(), 400);
+    }
 
-      if (termo === '') {
-        container.innerHTML = '<div class="empty">Digite um nome de produto para buscar.</div>';
+    async function searchInsumos() {
+      const term = document.getElementById('searchInput').value.trim();
+      const container = document.getElementById('searchResults');
+
+      if (term.length < 2) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">🌱</div><p>Digite ao menos 2 caracteres para buscar.</p></div>`;
         return;
       }
 
-      var resultados = BASE_DADOS.filter(function (p) {
-        return (
-          p.nome.toLowerCase().indexOf(termo) !== -1 ||
-          p.tipo.toLowerCase().indexOf(termo) !== -1 ||
-          p.principio.toLowerCase().indexOf(termo) !== -1 ||
-          p.cultura.toLowerCase().indexOf(termo) !== -1 ||
-          p.praga.toLowerCase().indexOf(termo) !== -1
+      container.innerHTML = `<div class="loading">🔄 Buscando insumos...</div>`;
+
+      try {
+        // Tenta buscar por nome ilike; ajusta campo conforme schema
+        let query = supabase.from('insumos').select('*').ilike('nome', `%${term}%`).limit(50);
+        let { data, error } = await query;
+
+        // Se falhar, tenta campo 'descricao'
+        if (error) {
+          const retry = await supabase.from('insumos').select('*').ilike('descricao', `%${term}%`).limit(50);
+          data = retry.data; error = retry.error;
+        }
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>Nenhum insumo encontrado para "${term}".</p></div>`;
+          return;
+        }
+
+        renderSearchResults(data);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao buscar: ${err.message}</p></div>`;
+      }
+    }
+
+    function renderSearchResults(data) {
+      const container = document.getElementById('searchResults');
+      const html = `
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Unidade</th>
+                <th>Código</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(item => `
+                <tr>
+                  <td>${escapeHtml(item.nome || item.descricao || item.name || 'Sem nome')}</td>
+                  <td>${escapeHtml(item.unidade || item.uni || '-')}</td>
+                  <td>${escapeHtml(item.codigo || item.id || '-')}</td>
+                  <td>
+                    <button class="btn btn-primary" style="padding:8px 14px;font-size:0.85rem" onclick="openEntrada(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                      📥 Entrada
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    // ---------- ENTRADA ----------
+    function openEntrada(insumo) {
+      currentInsumo = insumo;
+      const nome = insumo.nome || insumo.descricao || insumo.name || 'Insumo';
+      document.getElementById('entradaSub').textContent = `Item: ${nome}`;
+      document.getElementById('entradaQtd').value = '';
+      document.getElementById('entradaPreco').value = '';
+      openModal('modalEntrada');
+      setTimeout(() => document.getElementById('entradaQtd').focus(), 100);
+    }
+
+    async function confirmEntrada() {
+      const qtd = parseFloat(document.getElementById('entradaQtd').value);
+      const preco = parseFloat(document.getElementById('entradaPreco').value);
+
+      if (!qtd || qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
+      if (isNaN(preco) || preco < 0) { showToast('Informe um preço válido.', 'error'); return; }
+      if (!currentInsumo) { showToast('Nenhum insumo selecionado.', 'error'); return; }
+
+      const insumoId = currentInsumo.id;
+      const nome = currentInsumo.nome || currentInsumo.descricao || currentInsumo.name || 'Insumo';
+      const unidade = currentInsumo.unidade || currentInsumo.uni || '';
+
+      try {
+        // Verifica se já existe no estoque
+        const { data: existing, error: errFind } = await supabase
+          .from('estoque')
+          .select('*')
+          .eq('insumo_id', insumoId)
+          .limit(1);
+
+        if (errFind) throw errFind;
+
+        if (existing && existing.length > 0) {
+          const row = existing[0];
+          const novaQtd = (parseFloat(row.quantidade) || 0) + qtd;
+          const novoTotal = (parseFloat(row.total_pago) || 0) + (qtd * preco);
+
+          const { error: errUpd } = await supabase
+            .from('estoque')
+            .update({
+              quantidade: novaQtd,
+              total_pago: novoTotal,
+              atualizado_em: new Date().toISOString()
+            })
+            .eq('id', row.id);
+
+          if (errUpd) throw errUpd;
+        } else {
+          const { error: errIns } = await supabase
+            .from('estoque')
+            .insert({
+              insumo_id: insumoId,
+              nome: nome,
+              unidade: unidade,
+              quantidade: qtd,
+              total_pago: qtd * preco,
+              atualizado_em: new Date().toISOString()
+            });
+
+          if (errIns) throw errIns;
+        }
+
+        // Registra log
+        await supabase.from('log_movimentacoes').insert({
+          insumo_id: insumoId,
+          nome: nome,
+          tipo: 'ENTRADA',
+          quantidade: qtd,
+          preco_unitario: preco,
+          criado_em: new Date().toISOString()
+        });
+
+        showToast(`Entrada de ${qtd} ${unidade} registrada para ${nome}.`, 'success');
+        closeModal('modalEntrada');
+        currentInsumo = null;
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao registrar entrada: ' + err.message, 'error');
+      }
+    }
+
+    // ---------- MEU ESTOQUE ----------
+    async function loadEstoque() {
+      const container = document.getElementById('estoqueResults');
+      container.innerHTML = `<div class="loading">🔄 Carregando estoque...</div>`;
+
+      try {
+        const { data, error } = await supabase
+          .from('estoque')
+          .select('*')
+          .order('nome', { ascending: true });
+
+        if (error) throw error;
+
+        estoqueCache = data || [];
+        renderStats();
+        renderEstoque();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao carregar estoque: ${err.message}</p></div>`;
+      }
+    }
+
+    function renderStats() {
+      const total = estoqueCache.length;
+      const itens = estoqueCache.reduce((s, i) => s + (parseFloat(i.quantidade) || 0), 0);
+      const baixo = estoqueCache.filter(i => (parseFloat(i.quantidade) || 0) > 0 && (parseFloat(i.quantidade) || 0) < 5).length;
+      const zerados = estoqueCache.filter(i => (parseFloat(i.quantidade) || 0) <= 0).length;
+
+      document.getElementById('statsContainer').innerHTML = `
+        <div class="stat-card"><div class="label">Itens Cadastrados</div><div class="value">${total}</div></div>
+        <div class="stat-card"><div class="label">Qtd Total em Estoque</div><div class="value">${itens.toFixed(2)}</div></div>
+        <div class="stat-card"><div class="label">Estoque Baixo</div><div class="value">${baixo}</div></div>
+        <div class="stat-card"><div class="label">Zerados</div><div class="value">${zerados}</div></div>
+      `;
+    }
+
+    function renderEstoque() {
+      const container = document.getElementById('estoqueResults');
+      const filter = document.getElementById('estoqueFilter').value.trim().toLowerCase();
+      let lista = estoqueCache;
+
+      if (filter) {
+        lista = estoqueCache.filter(i =>
+          (i.nome || '').toLowerCase().includes(filter)
         );
-      });
+      }
 
-      if (resultados.length === 0) {
-        container.innerHTML = '<div class="empty">Nenhum produto encontrado para "' + escapeHtml(termo) + '".</div>';
+      if (lista.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>Nenhum item em estoque.</p></div>`;
         return;
       }
 
-      for (var i = 0; i < resultados.length; i++) {
-        container.appendChild(renderCard(resultados[i]));
+      const html = `
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Unidade</th>
+                <th>Quantidade</th>
+                <th>Preço Médio</th>
+                <th>Status</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lista.map(item => {
+                const qtd = parseFloat(item.quantidade) || 0;
+                const total = parseFloat(item.total_pago) || 0;
+                const precoMedio = qtd > 0 ? (total / qtd) : 0;
+                let badge = '<span class="badge badge-ok">OK</span>';
+                if (qtd <= 0) badge = '<span class="badge badge-out">Zerado</span>';
+                else if (qtd < 5) badge = '<span class="badge badge-low">Baixo</span>';
+
+                return `
+                  <tr>
+                    <td>${escapeHtml(item.nome || '-')}</td>
+                    <td>${escapeHtml(item.unidade || '-')}</td>
+                    <td><strong>${qtd.toFixed(2)}</strong></td>
+                    <td>R$ ${precoMedio.toFixed(2)}</td>
+                    <td>${badge}</td>
+                    <td>
+                      <button class="btn btn-danger" style="padding:8px 14px;font-size:0.85rem" onclick="openSaida(${item.id})">
+                        📤 Saída
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    function openSaida(estoqueId) {
+      const item = estoqueCache.find(i => i.id === estoqueId);
+      if (!item) { showToast('Item não encontrado.', 'error'); return; }
+
+      currentEstoqueItem = item;
+      const qtd = parseFloat(item.quantidade) || 0;
+      document.getElementById('saidaSub').textContent = `Item: ${item.nome} | Saldo atual: ${qtd.toFixed(2)} ${item.unidade || ''}`;
+      document.getElementById('saidaQtd').value = '';
+      document.getElementById('saidaQtd').max = qtd;
+      openModal('modalSaida');
+      setTimeout(() => document.getElementById('saidaQtd').focus(), 100);
+    }
+
+    async function confirmSaida() {
+      const qtd = parseFloat(document.getElementById('saidaQtd').value);
+
+      if (!qtd || qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
+      if (!currentEstoqueItem) { showToast('Nenhum item selecionado.', 'error'); return; }
+
+      const saldo = parseFloat(currentEstoqueItem.quantidade) || 0;
+      if (qtd > saldo) { showToast(`Quantidade superior ao saldo (${saldo}).`, 'error'); return; }
+
+      try {
+        const novaQtd = saldo - qtd;
+
+        const { error } = await supabase
+          .from('estoque')
+          .update({
+            quantidade: novaQtd,
+            atualizado_em: new Date().toISOString()
+          })
+          .eq('id', currentEstoqueItem.id);
+
+        if (error) throw error;
+
+        await supabase.from('log_movimentacoes').insert({
+          insumo_id: currentEstoqueItem.insumo_id,
+          nome: currentEstoqueItem.nome,
+          tipo: 'SAIDA',
+          quantidade: qtd,
+          preco_unitario: 0,
+          criado_em: new Date().toISOString()
+        });
+
+        showToast(`Saída de ${qtd} ${currentEstoqueItem.unidade || ''} registrada.`, 'success');
+        closeModal('modalSaida');
+        currentEstoqueItem = null;
+        loadEstoque();
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao registrar saída: ' + err.message, 'error');
       }
     }
 
-    function renderCard(p) {
-      var card = document.createElement('div');
-      card.className = 'card';
+    // ---------- LOG ----------
+    async function loadLogs() {
+      const container = document.getElementById('logResults');
+      container.innerHTML = `<div class="loading">🔄 Carregando logs...</div>`;
 
-      var tipo = document.createElement('span');
-      tipo.className = 'tipo';
-      tipo.textContent = p.tipo;
+      try {
+        const { data, error } = await supabase
+          .from('log_movimentacoes')
+          .select('*')
+          .order('criado_em', { ascending: false })
+          .limit(200);
 
-      var h3 = document.createElement('h3');
-      h3.textContent = p.nome;
+        if (error) throw error;
 
-      var pPrincipio = document.createElement('p');
-      pPrincipio.innerHTML = '<strong>Princípio Ativo:</strong> ' + escapeHtml(p.principio);
-
-      var pDose = document.createElement('p');
-      pDose.className = 'dose';
-      pDose.innerHTML = '<strong>Dose:</strong> ' + escapeHtml(p.dose);
-
-      var pCultura = document.createElement('p');
-      pCultura.innerHTML = '<strong>Cultura:</strong> ' + escapeHtml(p.cultura);
-
-      var pPraga = document.createElement('p');
-      pPraga.innerHTML = '<strong>Alvo:</strong> ' + escapeHtml(p.praga);
-
-      card.appendChild(tipo);
-      card.appendChild(h3);
-      card.appendChild(pPrincipio);
-      card.appendChild(pDose);
-      card.appendChild(pCultura);
-      card.appendChild(pPraga);
-
-      return card;
+        logsCache = data || [];
+        renderLogs();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao carregar logs: ${err.message}</p></div>`;
+      }
     }
 
+    function renderLogs() {
+      const container = document.getElementById('logResults');
+
+      if (logsCache.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Nenhuma movimentação registrada.</p></div>`;
+        return;
+      }
+
+      const html = `
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Item</th>
+                <th>Quantidade</th>
+                <th>Preço Unit.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${logsCache.map(log => {
+                const data = log.criado_em ? new Date(log.criado_em).toLocaleString('pt-BR') : '-';
+                const tipo = log.tipo || '-';
+                const tipoClass = tipo === 'ENTRADA' ? 'badge-ok' : 'badge-out';
+                return `
+                  <tr>
+                    <td>${data}</td>
+                    <td><span class="badge ${tipoClass}">${tipo}</span></td>
+                    <td>${escapeHtml(log.nome || '-')}</td>
+                    <td>${(parseFloat(log.quantidade) || 0).toFixed(2)}</td>
+                    <td>R$ ${(parseFloat(log.preco_unitario) || 0).toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    // ---------- UTILS ----------
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
       return String(str)
@@ -288,12 +860,22 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/'/g, '&#039;');
     }
 
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', function () {
-      searchProducts();
+    // Fechar modais ao clicar fora
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    // Enter nos modais
+    document.getElementById('modalEntrada').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmEntrada();
+    });
+    document.getElementById('modalSaida').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmSaida();
     });
   </script>
 </body>
