@@ -1,557 +1,608 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nelcir - Gestão de Estoque</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #e8f5e9;
-  color: #1b5e20;
-  padding-bottom: 40px;
-}
-header {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
-  color: #fff;
-  padding: 18px 12px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-}
-header h1 { font-size: 22px; margin-bottom: 4px; }
-header p { font-size: 13px; opacity: 0.9; }
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  background: #c8e6c9;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.nav-btn {
-  flex: 1 1 auto;
-  min-width: 120px;
-  padding: 14px 10px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  background: #2e7d32;
-  color: #fff;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.nav-btn:active { transform: scale(0.96); }
-.nav-btn.active { background: #1b5e20; box-shadow: 0 0 0 3px #a5d6a7; }
-main { max-width: 720px; margin: 0 auto; padding: 14px; }
-.tab { display: none; }
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-.card h2 {
-  font-size: 18px;
-  margin-bottom: 14px;
-  color: #1b5e20;
-  border-bottom: 2px solid #a5d6a7;
-  padding-bottom: 6px;
-}
-label { display: block; font-size: 14px; font-weight: 600; margin: 10px 0 4px; }
-input, select, textarea {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  border: 2px solid #c8e6c9;
-  border-radius: 10px;
-  outline: none;
-}
-input:focus, select:focus, textarea:focus { border-color: #2e7d32; }
-.btn {
-  width: 100%;
-  padding: 16px;
-  font-size: 18px;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  margin-top: 14px;
-  transition: 0.2s;
-}
-.btn:active { transform: scale(0.97); }
-.btn-green { background: #2e7d32; color: #fff; }
-.btn-blue { background: #1565c0; color: #fff; }
-.btn-red { background: #c62828; color: #fff; }
-.btn-orange { background: #ef6c00; color: #fff; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { padding: 10px 6px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-th { background: #c8e6c9; color: #1b5e20; }
-tr:hover { background: #f1f8e9; }
-.msg {
-  padding: 12px;
-  border-radius: 8px;
-  margin: 10px 0;
-  font-size: 14px;
-  font-weight: 600;
-  display: none;
-}
-.msg-ok { background: #c8e6c9; color: #1b5e20; }
-.msg-err { background: #ffcdd2; color: #b71c1c; }
-.empty { text-align: center; padding: 20px; color: #757575; font-style: italic; }
-@media (max-width: 480px) {
-  header h1 { font-size: 18px; }
-  .nav-btn { font-size: 14px; padding: 12px 6px; }
-  th, td { font-size: 12px; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nelcir - Controle de Estoque</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f4f6f5;
+      color: #2c3e2d;
+      padding-bottom: 40px;
+    }
+    header {
+      background: linear-gradient(135deg, #3a7d44, #2c5e34);
+      color: #fff;
+      padding: 18px 16px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    header h1 { font-size: 22px; margin-bottom: 4px; }
+    header p { font-size: 13px; opacity: 0.9; }
+    .tabs {
+      display: flex;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 2px solid #e0e5e0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 14px 6px;
+      border: none;
+      background: #fff;
+      color: #5a6b5c;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active {
+      color: #3a7d44;
+      border-bottom-color: #3a7d44;
+      background: #f8fbf8;
+    }
+    .tab-content { display: none; padding: 18px 16px; }
+    .tab-content.active { display: block; }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 17px;
+      margin-bottom: 14px;
+      color: #2c5e34;
+    }
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #4a5a4c;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cdd6cd;
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #3a7d44;
+      box-shadow: 0 0 0 3px rgba(58,125,68,0.15);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .btn {
+      display: inline-block;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-primary { background: #3a7d44; color: #fff; width: 100%; }
+    .btn-primary:hover { background: #2c5e34; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { background: #a93226; }
+    .btn-sm { padding: 7px 12px; font-size: 12px; }
+    .product-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      border-left: 4px solid #3a7d44;
+    }
+    .product-item h3 { font-size: 15px; margin-bottom: 6px; color: #2c5e34; }
+    .product-meta { font-size: 12px; color: #6a7a6c; margin-bottom: 8px; }
+    .product-stats { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .stat { font-size: 13px; }
+    .stat strong { color: #2c5e34; }
+    .history-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .history-item.entrada { border-left: 4px solid #27ae60; }
+    .history-item.saida { border-left: 4px solid #e67e22; }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge.entrada { background: #d4f5e0; color: #1e7e3a; }
+    .badge.saida { background: #fde4cf; color: #b3541a; }
+    .empty {
+      text-align: center;
+      padding: 30px 16px;
+      color: #8a9a8c;
+      font-size: 14px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c5e34;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 25px;
+      font-size: 14px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: #c0392b; }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px;
+      max-width: 380px;
+      width: 100%;
+    }
+    .modal-content h3 { margin-bottom: 14px; color: #2c5e34; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .modal-actions .btn { flex: 1; }
+  </style>
 </head>
 <body>
+  <header>
+    <h1>🌱 Nelcir - Estoque Rural</h1>
+    <p>Controle de Estoque | Café & Mamão</p>
+  </header>
 
-<header>
-  <h1>🌱 Nelcir - Gestão de Estoque</h1>
-  <p>Sistema de Controle de Produtos</p>
-</header>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('entrada')">➕ Entrada / Novo</button>
+    <button class="tab-btn" onclick="showTab('estoque')">📦 Ver Estoque</button>
+    <button class="tab-btn" onclick="showTab('historico')">📋 Histórico</button>
+  </div>
 
-<nav>
-  <button class="nav-btn active" onclick="showTab('cadastro')">Cadastro</button>
-  <button class="nav-btn" onclick="showTab('entrada')">Entrada</button>
-  <button class="nav-btn" onclick="showTab('saida')">Saída</button>
-  <button class="nav-btn" onclick="showTab('estoque')">Estoque</button>
-  <button class="nav-btn" onclick="showTab('produtos')">Produtos</button>
-  <button class="nav-btn" onclick="showTab('movimentacoes')">Movimentações</button>
-</nav>
-
-<main>
-
-  <!-- CADASTRO -->
-  <section id="cadastro" class="tab" style="display:block;">
+  <!-- ABA 1: ENTRADA -->
+  <div id="tab-entrada" class="tab-content active">
     <div class="card">
-      <h2>📋 Cadastrar Produto</h2>
-      <div id="msg-cadastro" class="msg"></div>
-      <label for="cad-nome">Nome do Produto</label>
-      <input type="text" id="cad-nome" placeholder="Ex: Semente de Milho">
-      <label for="cad-codigo">Código</label>
-      <input type="text" id="cad-codigo" placeholder="Ex: MILHO001">
-      <label for="cad-unidade">Unidade</label>
-      <select id="cad-unidade">
-        <option value="un">Unidade</option>
-        <option value="kg">Quilo (kg)</option>
-        <option value="g">Grama (g)</option>
-        <option value="L">Litro (L)</option>
-        <option value="ml">Mililitro (ml)</option>
-        <option value="cx">Caixa</option>
-        <option value="sc">Saco</option>
-      </select>
-      <label for="cad-categoria">Categoria</label>
-      <input type="text" id="cad-categoria" placeholder="Ex: Sementes">
-      <button class="btn btn-green" onclick="cadastrarProduto()">💾 Salvar Produto</button>
+      <h2>Registrar Nova Entrada</h2>
+      <form id="formEntrada">
+        <div class="form-group">
+          <label for="nome">Nome do Produto *</label>
+          <input type="text" id="nome" placeholder="Ex: Café Arábica, Mamão Formosa..." required>
+        </div>
+        <div class="form-group">
+          <label for="unidade">Unidade *</label>
+          <select id="unidade" required>
+            <option value="kg">Quilo (kg)</option>
+            <option value="un">Unidade (un)</option>
+            <option value="saca">Saca</option>
+            <option value="cx">Caixa</option>
+            <option value="l">Litro (L)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="descricao">Descrição</label>
+          <textarea id="descricao" placeholder="Observações sobre o produto..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="quantidade">Quantidade *</label>
+          <input type="number" id="quantidade" step="0.01" min="0.01" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="valor">Valor Pago (R$) *</label>
+          <input type="number" id="valor" step="0.01" min="0.01" placeholder="0,00" required>
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Salvar Entrada</button>
+      </form>
     </div>
-  </section>
+  </div>
 
-  <!-- ENTRADA -->
-  <section id="entrada" class="tab">
+  <!-- ABA 2: ESTOQUE -->
+  <div id="tab-estoque" class="tab-content">
     <div class="card">
-      <h2>⬆️ Entrada de Estoque</h2>
-      <div id="msg-entrada" class="msg"></div>
-      <label for="ent-produto">Produto</label>
-      <select id="ent-produto"><option value="">Carregando...</option></select>
-      <label for="ent-quantidade">Quantidade</label>
-      <input type="number" id="ent-quantidade" placeholder="0" min="0" step="0.01">
-      <label for="ent-motivo">Motivo</label>
-      <input type="text" id="ent-motivo" placeholder="Ex: Compra de fornecedor">
-      <button class="btn btn-blue" onclick="registrarEntrada()">✅ Registrar Entrada</button>
+      <h2>📦 Produtos em Estoque</h2>
+      <div id="listaEstoque"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- SAÍDA -->
-  <section id="saida" class="tab">
+  <!-- ABA 3: HISTÓRICO -->
+  <div id="tab-historico" class="tab-content">
     <div class="card">
-      <h2>⬇️ Saída de Estoque</h2>
-      <div id="msg-saida" class="msg"></div>
-      <label for="sai-produto">Produto</label>
-      <select id="sai-produto"><option value="">Carregando...</option></select>
-      <label for="sai-quantidade">Quantidade</label>
-      <input type="number" id="sai-quantidade" placeholder="0" min="0" step="0.01">
-      <label for="sai-motivo">Motivo</label>
-      <input type="text" id="sai-motivo" placeholder="Ex: Venda / Uso na lavoura">
-      <button class="btn btn-red" onclick="registrarSaida()">📤 Registrar Saída</button>
+      <h2>📋 Histórico de Movimentações</h2>
+      <div id="listaHistorico"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- ESTOQUE -->
-  <section id="estoque" class="tab">
-    <div class="card">
-      <h2>📦 Estoque Atual</h2>
-      <button class="btn btn-green" onclick="carregarEstoque()">🔄 Atualizar</button>
-      <div id="tabela-estoque" class="empty">Clique em Atualizar para ver o estoque.</div>
+  <!-- MODAL SAÍDA -->
+  <div id="modalSaida" class="modal">
+    <div class="modal-content">
+      <h3>Dar Saída</h3>
+      <p style="font-size:13px;margin-bottom:12px;color:#5a6b5c;" id="modalProdutoNome"></p>
+      <div class="form-group">
+        <label for="saidaQtd">Quantidade</label>
+        <input type="number" id="saidaQtd" step="0.01" min="0.01" placeholder="0">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="confirmarSaida()">Confirmar Saída</button>
+        <button class="btn" style="background:#ccc;color:#333;" onclick="fecharModal()">Cancelar</button>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <!-- PRODUTOS -->
-  <section id="produtos" class="tab">
-    <div class="card">
-      <h2>🏷️ Produtos Cadastrados</h2>
-      <button class="btn btn-green" onclick="carregarProdutos()">🔄 Atualizar</button>
-      <div id="tabela-produtos" class="empty">Clique em Atualizar para ver os produtos.</div>
-    </div>
-  </section>
+  <div id="toast" class="toast"></div>
 
-  <!-- MOVIMENTAÇÕES -->
-  <section id="movimentacoes" class="tab">
-    <div class="card">
-      <h2>📜 Movimentações</h2>
-      <button class="btn btn-green" onclick="carregarMovimentacoes()">🔄 Atualizar</button>
-      <div id="tabela-movimentacoes" class="empty">Clique em Atualizar para ver as movimentações.</div>
-    </div>
-  </section>
-
-</main>
-
-<script>
-// ===== NAVEGAÇÃO (topo absoluto) =====
-function showTab(nome) {
-  var tabs = document.querySelectorAll('.tab');
-  for (var i = 0; i < tabs.length; i++) {
-    tabs[i].style.display = 'none';
-  }
-  var alvo = document.getElementById(nome);
-  if (alvo) { alvo.style.display = 'block'; }
-  var btns = document.querySelectorAll('.nav-btn');
-  for (var j = 0; j < btns.length; j++) {
-    btns[j].classList.remove('active');
-  }
-  if (event && event.currentTarget) {
-    event.currentTarget.classList.add('active');
-  }
-}
-
-// ===== SUPABASE (inicialização segura) =====
-var supabase = null;
-try {
-  var SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
-  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
-  if (window.supabase && window.supabase.createClient) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  } else {
-    console.warn('Biblioteca Supabase não carregada.');
-  }
-} catch (e) {
-  console.error('Erro ao inicializar Supabase:', e);
-  supabase = null;
-}
-
-// ===== HELPERS =====
-function mostrarMsg(id, texto, ok) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = texto;
-  el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
-  el.style.display = 'block';
-  setTimeout(function() { el.style.display = 'none'; }, 4000);
-}
-
-function checkSupabase() {
-  if (!supabase) {
-    alert('Conexão com o banco indisponível. Verifique sua internet e recarregue a página.');
-    return false;
-  }
-  return true;
-}
-
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-// ===== CADASTRO DE PRODUTO =====
-async function cadastrarProduto() {
-  if (!checkSupabase()) return;
-  var nome = document.getElementById('cad-nome').value.trim();
-  var codigo = document.getElementById('cad-codigo').value.trim();
-  var unidade = document.getElementById('cad-unidade').value;
-  var categoria = document.getElementById('cad-categoria').value.trim();
-
-  if (!nome) {
-    mostrarMsg('msg-cadastro', 'Informe o nome do produto.', false);
-    return;
-  }
-
-  try {
-    var dados = {
-      nome: nome,
-      codigo: codigo,
-      unidade: unidade,
-      categoria: categoria,
-      criado_em: new Date().toISOString()
-    };
-    var { error } = await supabase.from('produtos').insert([dados]);
-    if (error) throw error;
-    mostrarMsg('msg-cadastro', 'Produto cadastrado com sucesso!', true);
-    document.getElementById('cad-nome').value = '';
-    document.getElementById('cad-codigo').value = '';
-    document.getElementById('cad-categoria').value = '';
-    carregarProdutosSelect();
-  } catch (e) {
-    mostrarMsg('msg-cadastro', 'Erro ao cadastrar: ' + (e.message || e), false);
-  }
-}
-
-// ===== CARREGAR PRODUTOS NOS SELECTS =====
-async function carregarProdutosSelect() {
-  if (!checkSupabase()) return;
-  try {
-    var { data, error } = await supabase.from('produtos').select('*').order('nome', { ascending: true });
-    if (error) throw error;
-    var opts = '<option value="">Selecione um produto</option>';
-    if (data && data.length) {
-      for (var i = 0; i < data.length; i++) {
-        opts += '<option value="' + data[i].id + '">' +
-          escapeHtml(data[i].nome) +
-          (data[i].codigo ? ' (' + escapeHtml(data[i].codigo) + ')' : '') +
-          '</option>';
+  <script>
+    // ===== SUPABASE INIT (com try/catch para estabilidade) =====
+    let supabase = null;
+    let supabaseOk = false;
+    try {
+      const SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+      if (window.supabase && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        supabaseOk = true;
+      } else {
+        console.warn('Biblioteca Supabase não carregada. Modo local ativado.');
       }
-    } else {
-      opts = '<option value="">Nenhum produto cadastrado</option>';
+    } catch (err) {
+      console.error('Erro ao inicializar Supabase:', err);
+      supabase = null;
+      supabaseOk = false;
     }
-    document.getElementById('ent-produto').innerHTML = opts;
-    document.getElementById('sai-produto').innerHTML = opts;
-  } catch (e) {
-    console.error('Erro ao carregar produtos (select):', e);
-  }
-}
 
-// ===== REGISTRAR ENTRADA =====
-async function registrarEntrada() {
-  if (!checkSupabase()) return;
-  var produtoId = document.getElementById('ent-produto').value;
-  var quantidade = parseFloat(document.getElementById('ent-quantidade').value);
-  var motivo = document.getElementById('ent-motivo').value.trim();
+    // ===== DADOS LOCAIS (fallback) =====
+    let produtos = JSON.parse(localStorage.getItem('nelcir_produtos') || '[]');
+    let historico = JSON.parse(localStorage.getItem('nelcir_historico') || '[]');
+    let produtoSaidaId = null;
 
-  if (!produtoId) { mostrarMsg('msg-entrada', 'Selecione um produto.', false); return; }
-  if (!quantidade || quantidade <= 0) { mostrarMsg('msg-entrada', 'Informe uma quantidade válida.', false); return; }
+    // ===== NAVEGAÇÃO (topo absoluto) =====
+    function showTab(nome) {
+      try {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        const tab = document.getElementById('tab-' + nome);
+        if (tab) tab.classList.add('active');
+        const btns = document.querySelectorAll('.tab-btn');
+        const idx = nome === 'entrada' ? 0 : nome === 'estoque' ? 1 : 2;
+        if (btns[idx]) btns[idx].classList.add('active');
+        if (nome === 'estoque') carregarEstoque();
+        if (nome === 'historico') carregarHistorico();
+        window.scrollTo(0, 0);
+      } catch (e) {
+        console.error('Erro ao trocar aba:', e);
+      }
+    }
+    window.showTab = showTab;
 
-  try {
-    // 1. Registrar movimentação
-    var mov = {
-      produto_id: produtoId,
-      tipo: 'entrada',
-      quantidade: quantidade,
-      motivo: motivo,
-      data: new Date().toISOString()
-    };
-    var { error: errMov } = await supabase.from('movimentacoes').insert([mov]);
-    if (errMov) throw errMov;
+    // ===== TOAST =====
+    function toast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 2800);
+    }
 
-    // 2. Buscar estoque atual
-    var { data: estAtual, error: errBusca } = await supabase
-      .from('estoque')
-      .select('*')
-      .eq('produto_id', produtoId)
-      .maybeSingle();
-    if (errBusca) throw errBusca;
+    // ===== SALVAR LOCAL =====
+    function salvarLocal() {
+      localStorage.setItem('nelcir_produtos', JSON.stringify(produtos));
+      localStorage.setItem('nelcir_historico', JSON.stringify(historico));
+    }
 
-    var qtdAtual = (estAtual && estAtual.quantidade) ? parseFloat(estAtual.quantidade) : 0;
-    var novaQtd = qtdAtual + quantidade;
+    // ===== FORMATAR =====
+    function formatMoeda(v) {
+      return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+    }
+    function formatData(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
 
-    // 3. UPSERT no estoque
-    var { error: errUpsert } = await supabase
-      .from('estoque')
-      .upsert([
-        {
-          produto_id: produtoId,
-          quantidade: novaQtd,
-          atualizado_em: new Date().toISOString()
+    // ===== SALVAR ENTRADA =====
+    document.getElementById('formEntrada').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value.trim();
+      const unidade = document.getElementById('unidade').value;
+      const descricao = document.getElementById('descricao').value.trim();
+      const quantidade = parseFloat(document.getElementById('quantidade').value);
+      const valor = parseFloat(document.getElementById('valor').value);
+
+      if (!nome || !quantidade || !valor) {
+        toast('Preencha os campos obrigatórios.', true);
+        return;
+      }
+
+      const agora = new Date().toISOString();
+
+      // Busca produto existente (local)
+      let produto = produtos.find(p => p.nome.toLowerCase() === nome.toLowerCase());
+
+      if (produto) {
+        // Atualiza preço médio
+        const valorTotalAtual = produto.preco_medio * produto.quantidade;
+        const valorTotalNovo = valorTotalAtual + (valor * quantidade);
+        produto.quantidade += quantidade;
+        produto.preco_medio = valorTotalNovo / produto.quantidade;
+        produto.descricao = descricao || produto.descricao;
+        produto.updated_at = agora;
+      } else {
+        produto = {
+          id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          nome: nome,
+          unidade: unidade,
+          descricao: descricao,
+          quantidade: quantidade,
+          preco_medio: valor,
+          created_at: agora,
+          updated_at: agora
+        };
+        produtos.push(produto);
+      }
+
+      // Registra entrada no histórico
+      const movEntrada = {
+        id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        produto_id: produto.id,
+        produto_nome: produto.nome,
+        tipo: 'entrada',
+        quantidade: quantidade,
+        valor_unitario: valor,
+        unidade: unidade,
+        data: agora
+      };
+      historico.unshift(movEntrada);
+
+      // Tenta salvar no Supabase
+      if (supabaseOk && supabase) {
+        try {
+          await supabase.from('produtos').upsert({
+            id: produto.id,
+            nome: produto.nome,
+            unidade: produto.unidade,
+            descricao: produto.descricao,
+            quantidade: produto.quantidade,
+            preco_medio: produto.preco_medio,
+            updated_at: produto.updated_at
+          });
+          await supabase.from('historico').insert({
+            id: movEntrada.id,
+            produto_id: movEntrada.produto_id,
+            produto_nome: movEntrada.produto_nome,
+            tipo: movEntrada.tipo,
+            quantidade: movEntrada.quantidade,
+            valor_unitario: movEntrada.valor_unitario,
+            unidade: movEntrada.unidade,
+            data: movEntrada.data
+          });
+        } catch (err) {
+          console.warn('Supabase save falhou, mantendo local:', err);
         }
-      ], { onConflict: 'produto_id' });
-    if (errUpsert) throw errUpsert;
+      }
 
-    mostrarMsg('msg-entrada', 'Entrada registrada! Novo estoque: ' + novaQtd, true);
-    document.getElementById('ent-quantidade').value = '';
-    document.getElementById('ent-motivo').value = '';
-  } catch (e) {
-    mostrarMsg('msg-entrada', 'Erro: ' + (e.message || e), false);
-  }
-}
+      salvarLocal();
+      this.reset();
+      toast('Entrada registrada com sucesso!');
+      showTab('estoque');
+    });
 
-// ===== REGISTRAR SAÍDA =====
-async function registrarSaida() {
-  if (!checkSupabase()) return;
-  var produtoId = document.getElementById('sai-produto').value;
-  var quantidade = parseFloat(document.getElementById('sai-quantidade').value);
-  var motivo = document.getElementById('sai-motivo').value.trim();
+    // ===== CARREGAR ESTOQUE =====
+    async function carregarEstoque() {
+      const container = document.getElementById('listaEstoque');
+      container.innerHTML = '<div class="empty">Carregando...</div>';
 
-  if (!produtoId) { mostrarMsg('msg-saida', 'Selecione um produto.', false); return; }
-  if (!quantidade || quantidade <= 0) { mostrarMsg('msg-saida', 'Informe uma quantidade válida.', false); return; }
-
-  try {
-    // 1. Buscar estoque atual
-    var { data: estAtual, error: errBusca } = await supabase
-      .from('estoque')
-      .select('*')
-      .eq('produto_id', produtoId)
-      .maybeSingle();
-    if (errBusca) throw errBusca;
-
-    var qtdAtual = (estAtual && estAtual.quantidade) ? parseFloat(estAtual.quantidade) : 0;
-    if (quantidade > qtdAtual) {
-      mostrarMsg('msg-saida', 'Estoque insuficiente. Atual: ' + qtdAtual, false);
-      return;
-    }
-
-    // 2. Registrar movimentação
-    var mov = {
-      produto_id: produtoId,
-      tipo: 'saida',
-      quantidade: quantidade,
-      motivo: motivo,
-      data: new Date().toISOString()
-    };
-    var { error: errMov } = await supabase.from('movimentacoes').insert([mov]);
-    if (errMov) throw errMov;
-
-    // 3. Subtrair do estoque
-    var novaQtd = qtdAtual - quantidade;
-    var { error: errUpdate } = await supabase
-      .from('estoque')
-      .upsert([
-        {
-          produto_id: produtoId,
-          quantidade: novaQtd,
-          atualizado_em: new Date().toISOString()
+      if (supabaseOk && supabase) {
+        try {
+          const { data, error } = await supabase.from('produtos').select('*').order('nome', { ascending: true });
+          if (!error && data && data.length) {
+            produtos = data.map(p => ({
+              id: p.id,
+              nome: p.nome,
+              unidade: p.unidade,
+              descricao: p.descricao || '',
+              quantidade: Number(p.quantidade) || 0,
+              preco_medio: Number(p.preco_medio) || 0,
+              created_at: p.created_at,
+              updated_at: p.updated_at
+            }));
+            salvarLocal();
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar estoque do Supabase:', err);
         }
-      ], { onConflict: 'produto_id' });
-    if (errUpdate) throw errUpdate;
+      }
 
-    mostrarMsg('msg-saida', 'Saída registrada! Estoque restante: ' + novaQtd, true);
-    document.getElementById('sai-quantidade').value = '';
-    document.getElementById('sai-motivo').value = '';
-  } catch (e) {
-    mostrarMsg('msg-saida', 'Erro: ' + (e.message || e), false);
-  }
-}
+      if (!produtos.length) {
+        container.innerHTML = '<div class="empty">Nenhum produto em estoque.<br>Registre uma entrada na primeira aba.</div>';
+        return;
+      }
 
-// ===== CARREGAR ESTOQUE =====
-async function carregarEstoque() {
-  if (!checkSupabase()) return;
-  var cont = document.getElementById('tabela-estoque');
-  cont.className = '';
-  cont.innerHTML = '<div class="empty">Carregando...</div>';
-  try {
-    var { data, error } = await supabase
-      .from('estoque')
-      .select('produto_id, quantidade, atualizado_em, produtos(nome, codigo, unidade)')
-      .order('atualizado_em', { ascending: false });
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhum item em estoque.</div>';
-      return;
+      container.innerHTML = produtos.map(p => `
+        <div class="product-item">
+          <h3>${escapeHtml(p.nome)}</h3>
+          <div class="product-meta">Unidade: ${escapeHtml(p.unidade || '-')} ${p.descricao ? '• ' + escapeHtml(p.descricao) : ''}</div>
+          <div class="product-stats">
+            <div class="stat">📊 Quantidade: <strong>${Number(p.quantidade).toFixed(2)} ${escapeHtml(p.unidade || '')}</strong></div>
+            <div class="stat">💰 Preço Médio: <strong>${formatMoeda(p.preco_medio)}</strong></div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="abrirModalSaida('${p.id}')">⬇️ DAR SAÍDA</button>
+        </div>
+      `).join('');
     }
-    var html = '<table><thead><tr><th>Produto</th><th>Código</th><th>Qtd</th><th>Un.</th></tr></thead><tbody>';
-    for (var i = 0; i < data.length; i++) {
-      var item = data[i];
-      var prod = item.produtos || {};
-      html += '<tr>' +
-        '<td>' + escapeHtml(prod.nome || '—') + '</td>' +
-        '<td>' + escapeHtml(prod.codigo || '—') + '</td>' +
-        '<td>' + (item.quantidade !== null ? item.quantidade : '0') + '</td>' +
-        '<td>' + escapeHtml(prod.unidade || '') + '</td>' +
-        '</tr>';
-    }
-    html += '</tbody></table>';
-    cont.innerHTML = html;
-  } catch (e) {
-    cont.innerHTML = '<div class="empty">Erro ao carregar: ' + escapeHtml(e.message || e) + '</div>';
-  }
-}
 
-// ===== CARREGAR PRODUTOS =====
-async function carregarProdutos() {
-  if (!checkSupabase()) return;
-  var cont = document.getElementById('tabela-produtos');
-  cont.className = '';
-  cont.innerHTML = '<div class="empty">Carregando...</div>';
-  try {
-    var { data, error } = await supabase.from('produtos').select('*').order('nome', { ascending: true });
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhum produto cadastrado.</div>';
-      return;
-    }
-    var html = '<table><thead><tr><th>Nome</th><th>Código</th><th>Un.</th><th>Categoria</th></tr></thead><tbody>';
-    for (var i = 0; i < data.length; i++) {
-      var p = data[i];
-      html += '<tr>' +
-        '<td>' + escapeHtml(p.nome) + '</td>' +
-        '<td>' + escapeHtml(p.codigo || '—') + '</td>' +
-        '<td>' + escapeHtml(p.unidade || '') + '</td>' +
-        '<td>' + escapeHtml(p.categoria || '—') + '</td>' +
-        '</tr>';
-    }
-    html += '</tbody></table>';
-    cont.innerHTML = html;
-  } catch (e) {
-    cont.innerHTML = '<div class="empty">Erro ao carregar: ' + escapeHtml(e.message || e) + '</div>';
-  }
-}
+    // ===== CARREGAR HISTÓRICO =====
+    async function carregarHistorico() {
+      const container = document.getElementById('listaHistorico');
+      container.innerHTML = '<div class="empty">Carregando...</div>';
 
-// ===== CARREGAR MOVIMENTAÇÕES =====
-async function carregarMovimentacoes() {
-  if (!checkSupabase()) return;
-  var cont = document.getElementById('tabela-movimentacoes');
-  cont.className = '';
-  cont.innerHTML = '<div class="empty">Carregando...</div>';
-  try {
-    var { data, error } = await supabase
-      .from('movimentacoes')
-      .select('tipo, quantidade, motivo, data, produtos(nome, codigo)')
-      .order('data', { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhuma movimentação registrada.</div>';
-      return;
-    }
-    var html = '<table><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Motivo</th></tr></thead><tbody>';
-    for (var i = 0; i < data.length; i++) {
-      var m = data[i];
-      var prod = m.produtos || {};
-      var dataFmt = m.data ? new Date(m.data).toLocaleString('pt-BR') : '—';
-      var cor = m.tipo === 'entrada' ? '#1565c0' : '#c62828';
-      html += '<tr>' +
-        '<td>' + escapeHtml(dataFmt) + '</td>' +
-        '<td>' + escapeHtml(prod.nome || '—') + '</td>' +
-        '<td style="color:' + cor + ';font-weight:700;">' + escapeHtml(m.tipo) + '</td>' +
-        '<td>' + (m.quantidade !== null ? m.quantidade : '0') + '</td>' +
-        '<td>' + escapeHtml(m.motivo || '—') + '</td>' +
-        '</tr>';
-    }
-    html += '</tbody></table>';
-    cont.innerHTML = html;
-  } catch (e) {
-    cont.innerHTML = '<div class="empty">Erro ao carregar: ' + escapeHtml(e.message || e) + '</div>';
-  }
-}
+      if (supabaseOk && supabase) {
+        try {
+          const { data, error } = await supabase.from('historico').select('*').order('data', { ascending: false }).limit(200);
+          if (!error && data && data.length) {
+            historico = data.map(h => ({
+              id: h.id,
+              produto_id: h.produto_id,
+              produto_nome: h.produto_nome,
+              tipo: h.tipo,
+              quantidade: Number(h.quantidade) || 0,
+              valor_unitario: Number(h.valor_unitario) || 0,
+              unidade: h.unidade,
+              data: h.data
+            }));
+            salvarLocal();
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar histórico do Supabase:', err);
+        }
+      }
 
-// ===== INICIALIZAÇÃO =====
-window.addEventListener('DOMContentLoaded', function() {
-  if (supabase) {
-    carregarProdutosSelect();
-  } else {
-    document.getElementById('ent-produto').innerHTML = '<option value="">Banco indisponível</option>';
-    document.getElementById('sai-produto').innerHTML = '<option value="">Banco indisponível</option>';
-  }
-});
-</script>
+      if (!historico.length) {
+        container.innerHTML = '<div class="empty">Nenhuma movimentação registrada.</div>';
+        return;
+      }
+
+      container.innerHTML = historico.map(h => `
+        <div class="history-item ${h.tipo}">
+          <div>
+            <span class="badge ${h.tipo}">${h.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+            <strong>${escapeHtml(h.produto_nome || '')}</strong>
+            <div style="font-size:11px;color:#8a9a8c;margin-top:3px;">
+              ${Number(h.quantidade).toFixed(2)} ${escapeHtml(h.unidade || '')}
+              ${h.tipo === 'entrada' ? '• ' + formatMoeda(h.valor_unitario) : ''}
+              <br>${formatData(h.data)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== MODAL SAÍDA =====
+    window.abrirModalSaida = function(id) {
+      const p = produtos.find(x => x.id === id);
+      if (!p) { toast('Produto não encontrado.', true); return; }
+      produtoSaidaId = id;
+      document.getElementById('modalProdutoNome').textContent =
+        p.nome + ' • Disponível: ' + Number(p.quantidade).toFixed(2) + ' ' + (p.unidade || '');
+      document.getElementById('saidaQtd').value = '';
+      document.getElementById('saidaQtd').max = p.quantidade;
+      document.getElementById('modalSaida').classList.add('show');
+    };
+
+    window.fecharModal = function() {
+      document.getElementById('modalSaida').classList.remove('show');
+      produtoSaidaId = null;
+    };
+
+    window.confirmarSaida = async function() {
+      if (!produtoSaidaId) return;
+      const qtd = parseFloat(document.getElementById('saidaQtd').value);
+      const produto = produtos.find(p => p.id === produtoSaidaId);
+      if (!produto || !qtd || qtd <= 0) {
+        toast('Quantidade inválida.', true);
+        return;
+      }
+      if (qtd > produto.quantidade) {
+        toast('Quantidade maior que o estoque.', true);
+        return;
+      }
+
+      const agora = new Date().toISOString();
+      produto.quantidade -= qtd;
+      produto.updated_at = agora;
+
+      const movSaida = {
+        id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        produto_id: produto.id,
+        produto_nome: produto.nome,
+        tipo: 'saida',
+        quantidade: qtd,
+        valor_unitario: produto.preco_medio,
+        unidade: produto.unidade,
+        data: agora
+      };
+      historico.unshift(movSaida);
+
+      if (supabaseOk && supabase) {
+        try {
+          await supabase.from('produtos').upsert({
+            id: produto.id,
+            nome: produto.nome,
+            unidade: produto.unidade,
+            descricao: produto.descricao,
+            quantidade: produto.quantidade,
+            preco_medio: produto.preco_medio,
+            updated_at: produto.updated_at
+          });
+          await supabase.from('historico').insert({
+            id: movSaida.id,
+            produto_id: movSaida.produto_id,
+            produto_nome: movSaida.produto_nome,
+            tipo: movSaida.tipo,
+            quantidade: movSaida.quantidade,
+            valor_unitario: movSaida.valor_unitario,
+            unidade: movSaida.unidade,
+            data: movSaida.data
+          });
+        } catch (err) {
+          console.warn('Supabase saída falhou, mantendo local:', err);
+        }
+      }
+
+      salvarLocal();
+      fecharModal();
+      toast('Saída registrada!');
+      carregarEstoque();
+    };
+
+    // ===== UTIL =====
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!supabaseOk) {
+        toast('Modo local ativo (Supabase offline)', true);
+      }
+    });
+  </script>
 </body>
 </html>
