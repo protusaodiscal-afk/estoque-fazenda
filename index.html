@@ -3,151 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nelcir - Gestão de Insumos</title>
+<title>Nelcir - Gestão de Insumos Agrícolas</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  :root{
-    --verde-fazenda:#2e7d32;
-    --verde-escuro:#1b5e20;
-    --verde-claro:#66bb6a;
-    --verde-bg:#f1f8e9;
-    --branco:#ffffff;
-    --cinza:#757575;
-    --vermelho:#c62828;
-    --sombra:0 4px 12px rgba(0,0,0,.08);
+  :root {
+    --verde-fazenda: #2e7d32;
+    --verde-claro: #4caf50;
+    --verde-escuro: #1b5e20;
+    --verde-bg: #e8f5e9;
+    --branco: #ffffff;
+    --cinza: #f5f5f5;
+    --cinza-escuro: #333333;
+    --vermelho: #c62828;
+    --amarelo: #f9a825;
+    --sombra: 0 2px 8px rgba(0,0,0,0.1);
+    --sombra-hover: 0 4px 16px rgba(0,0,0,0.15);
   }
-  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
-  body{background:var(--verde-bg);color:#333;}
-  header{background:linear-gradient(135deg,var(--verde-escuro),var(--verde-fazenda));color:#fff;padding:18px 20px;position:sticky;top:0;z-index:100;box-shadow:var(--sombra);}
-  header h1{font-size:22px;display:flex;align-items:center;gap:10px;}
-  header h1 i{color:#a5d6a7;}
-  .nav-tabs{display:flex;background:#fff;border-bottom:3px solid var(--verde-claro);position:sticky;top:64px;z-index:99;}
-  .nav-tabs button{flex:1;padding:14px;border:none;background:transparent;cursor:pointer;font-size:15px;font-weight:600;color:var(--cinza);transition:.2s;border-bottom:3px solid transparent;display:flex;align-items:center;justify-content:center;gap:8px;}
-  .nav-tabs button.active{color:var(--verde-fazenda);border-bottom-color:var(--verde-fazenda);background:var(--verde-bg);}
-  .nav-tabs button:hover{background:var(--verde-bg);}
-  .container{max-width:1100px;margin:20px auto;padding:0 16px 60px;}
-  .tab-content{display:none;animation:fade .3s;}
-  .tab-content.active{display:block;}
-  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  .card{background:#fff;border-radius:16px;padding:20px;box-shadow:var(--sombra);margin-bottom:18px;border:1px solid #e0e0e0;}
-  .card h2{color:var(--verde-escuro);font-size:18px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-  .card h2 i{color:var(--verde-fazenda);}
-  .search-box{display:flex;gap:10px;margin-bottom:16px;}
-  .search-box input{flex:1;padding:12px 14px;border:2px solid #c8e6c9;border-radius:10px;font-size:15px;outline:none;}
-  .search-box input:focus{border-color:var(--verde-fazenda);}
-  .btn{padding:12px 18px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;transition:.2s;display:inline-flex;align-items:center;gap:8px;}
-  .btn-verde{background:var(--verde-fazenda);color:#fff;}
-  .btn-verde:hover{background:var(--verde-escuro);}
-  .btn-vermelho{background:var(--vermelho);color:#fff;}
-  .btn-vermelho:hover{background:#b71c1c;}
-  .btn-cinza{background:#e0e0e0;color:#333;}
-  .btn-cinza:hover{background:#bdbdbd;}
-  .result-list{display:grid;gap:10px;}
-  .result-item{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--verde-bg);border-radius:12px;border-left:4px solid var(--verde-fazenda);}
-  .result-item .info{flex:1;}
-  .result-item .info strong{color:var(--verde-escuro);display:block;font-size:15px;}
-  .result-item .info span{color:var(--cinza);font-size:13px;}
-  .result-item .actions{display:flex;gap:8px;}
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th{background:var(--verde-fazenda);color:#fff;padding:12px;text-align:left;font-weight:600;}
-  th:first-child{border-radius:10px 0 0 0;}
-  th:last-child{border-radius:0 10px 0 0;}
-  td{padding:12px;border-bottom:1px solid #e0e0e0;}
-  tr:hover{background:var(--verde-bg);}
-  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
-  .form-group label{display:block;font-size:13px;color:var(--cinza);margin-bottom:4px;font-weight:600;}
-  .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #c8e6c9;border-radius:8px;font-size:14px;outline:none;}
-  .form-group input:focus,.form-group select:focus{border-color:var(--verde-fazenda);}
-  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px;}
-  .modal.active{display:flex;}
-  .modal-content{background:#fff;border-radius:16px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.2);}
-  .modal-content h3{color:var(--verde-escuro);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
-  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
-  .badge-entrada{background:#c8e6c9;color:#1b5e20;}
-  .badge-saida{background:#ffcdd2;color:#b71c1c;}
-  .empty{text-align:center;color:var(--cinza);padding:30px;font-style:italic;}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 22px;border-radius:10px;z-index:300;opacity:0;transition:.3s;}
-  .toast.show{opacity:1;}
-  .toast.success{background:var(--verde-fazenda);}
-  .toast.error{background:var(--vermelho);}
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px;}
-  .stat-card{background:linear-gradient(135deg,var(--verde-fazenda),var(--verde-claro));color:#fff;border-radius:14px;padding:18px;box-shadow:var(--sombra);}
-  .stat-card .label{font-size:13px;opacity:.9;}
-  .stat-card .value{font-size:24px;font-weight:700;margin-top:4px;}
-  .stat-card i{float:right;font-size:28px;opacity:.7;}
-  @media(max-width:600px){
-    .nav-tabs button{font-size:12px;padding:12px 4px;flex-direction:column;gap:4px;}
-    .nav-tabs button i{font-size:18px;}
-    table{font-size:12px;}
-    th,td{padding:8px;}
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: var(--cinza); color: var(--cinza-escuro); }
+  header {
+    background: linear-gradient(135deg, var(--verde-escuro), var(--verde-fazenda));
+    color: var(--branco); padding: 18px 20px; box-shadow: var(--sombra);
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+  header h1 .logo { font-size: 28px; }
+  .nav-tabs {
+    display: flex; background: var(--verde-bg); border-bottom: 2px solid var(--verde-claro);
+    overflow-x: auto; position: sticky; top: 64px; z-index: 99;
+  }
+  .nav-tabs button {
+    flex: 1; min-width: 120px; padding: 14px 10px; border: none; background: transparent;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: var(--verde-escuro);
+    border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .nav-tabs button:hover { background: rgba(76,175,80,0.15); }
+  .nav-tabs button.active { background: var(--branco); border-bottom-color: var(--verde-fazenda); color: var(--verde-fazenda); }
+  .container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .tab-content { display: none; animation: fadeIn 0.25s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .card {
+    background: var(--branco); border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    box-shadow: var(--sombra); transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: var(--sombra-hover); }
+  .card h2 { color: var(--verde-fazenda); font-size: 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--verde-escuro); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--verde-fazenda); box-shadow: 0 0 0 3px rgba(46,125,50,0.15);
+  }
+  .btn {
+    background: var(--verde-fazenda); color: var(--branco); border: none; padding: 12px 22px;
+    border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { background: var(--verde-escuro); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-secondary { background: #607d8b; }
+  .btn-secondary:hover { background: #455a64; }
+  .btn-danger { background: var(--vermelho); }
+  .btn-danger:hover { background: #b71c1c; }
+  .btn-warning { background: var(--amarelo); color: #333; }
+  .btn-warning:hover { background: #f57f17; }
+  .search-box { position: relative; margin-bottom: 16px; }
+  .search-box input { width: 100%; padding: 12px 14px 12px 42px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+  .search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--verde-fazenda); font-size: 18px; }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .result-item {
+    background: var(--verde-bg); border: 1px solid #c8e6c9; border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .result-item:hover { background: #d7ecd9; transform: translateY(-2px); box-shadow: var(--sombra); }
+  .result-item .ri-name { font-weight: 700; color: var(--verde-escuro); margin-bottom: 4px; }
+  .result-item .ri-type { font-size: 12px; color: var(--verde-fazenda); font-weight: 600; text-transform: uppercase; }
+  .result-item .ri-desc { font-size: 13px; color: #555; margin-top: 6px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .badge-in { background: #c8e6c9; color: var(--verde-escuro); }
+  .badge-out { background: #ffcdd2; color: var(--vermelho); }
+  .badge-bio { background: #fff9c4; color: #f57f17; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table th, table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; }
+  table th { background: var(--verde-bg); color: var(--verde-escuro); font-weight: 700; font-size: 13px; }
+  table tr:hover { background: #f9fbf9; }
+  .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+  .empty-state .emoji { font-size: 48px; margin-bottom: 10px; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--verde-escuro);
+    color: #fff; padding: 12px 24px; border-radius: 8px; box-shadow: var(--sombra-hover);
+    z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--vermelho); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat-card { background: linear-gradient(135deg, var(--verde-fazenda), var(--verde-claro)); color: #fff; border-radius: 12px; padding: 18px; box-shadow: var(--sombra); }
+  .stat-card .label { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { color: var(--verde-fazenda); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .modal .close-btn { float: right; cursor: pointer; font-size: 22px; color: #888; border: none; background: none; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > .form-group { flex: 1; min-width: 140px; }
+  @media (max-width: 600px) {
+    header h1 { font-size: 18px; }
+    .nav-tabs button { font-size: 13px; min-width: 100px; }
+    .results-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1><i class="fas fa-tractor"></i> Nelcir - Gestão de Insumos</h1>
+  <h1><span class="logo">🌾</span> Nelcir - Gestão de Insumos</h1>
 </header>
 
 <div class="nav-tabs">
-  <button class="active" onclick="showTab('busca')"><i class="fas fa-search"></i> Busca / Entrada</button>
-  <button onclick="showTab('estoque')"><i class="fas fa-warehouse"></i> Meu Estoque</button>
-  <button onclick="showTab('historico')"><i class="fas fa-clock-rotate-left"></i> Histórico / Log</button>
+  <button id="tab-btn-busca" class="active" onclick="showTab('busca')">🔍 Busca / Entrada</button>
+  <button id="tab-btn-estoque" onclick="showTab('estoque')">📦 Meu Estoque</button>
+  <button id="tab-btn-historico" onclick="showTab('historico')">📋 Histórico</button>
 </div>
 
 <div class="container">
 
-  <!-- ABA 1: BUSCA / ENTRADA -->
+  <!-- ABA BUSCA / ENTRADA -->
   <div id="tab-busca" class="tab-content active">
     <div class="card">
-      <h2><i class="fas fa-magnifying-glass"></i> Buscar Insumos</h2>
+      <h2>🔎 Buscar Insumo</h2>
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Digite o nome do insumo..." onkeyup="if(event.key==='Enter')searchInsumos()">
-        <button class="btn btn-verde" onclick="searchInsumos()"><i class="fas fa-search"></i> Buscar</button>
+        <span class="icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Digite o nome do insumo (ex: Roundup, Actara, Score...)" oninput="filtrarInsumos()">
       </div>
-      <div id="searchResults" class="result-list">
-        <div class="empty">Digite um termo para buscar entre os 1000 insumos cadastrados.</div>
+      <div id="searchResults" class="results-grid"></div>
+      <div id="searchEmpty" class="empty-state" style="display:none;">
+        <div class="emoji">🌱</div>
+        <p>Nenhum insumo encontrado. Tente outro termo.</p>
       </div>
     </div>
   </div>
 
-  <!-- ABA 2: MEU ESTOQUE -->
+  <!-- ABA MEU ESTOQUE -->
   <div id="tab-estoque" class="tab-content">
     <div class="stats" id="statsContainer"></div>
     <div class="card">
-      <h2><i class="fas fa-boxes-stacked"></i> Estoque Atual</h2>
+      <h2>📦 Estoque Atual</h2>
       <div style="overflow-x:auto;">
         <table id="estoqueTable">
           <thead>
-            <tr>
-              <th>Insumo</th><th>Unidade</th><th>Quantidade</th><th>Preço Médio</th><th>Total Investido</th><th>Ações</th>
-            </tr>
+            <tr><th>Insumo</th><th>Tipo</th><th>Quantidade</th><th>Unidade</th><th>Ações</th></tr>
           </thead>
-          <tbody id="estoqueBody">
-            <tr><td colspan="6" class="empty">Carregando estoque...</td></tr>
-          </tbody>
+          <tbody id="estoqueBody"></tbody>
         </table>
+      </div>
+      <div id="estoqueEmpty" class="empty-state">
+        <div class="emoji">📭</div>
+        <p>Seu estoque está vazio. Registre uma entrada na aba Busca.</p>
       </div>
     </div>
   </div>
 
-  <!-- ABA 3: HISTÓRICO -->
+  <!-- ABA HISTÓRICO -->
   <div id="tab-historico" class="tab-content">
     <div class="card">
-      <h2><i class="fas fa-list-check"></i> Movimentações</h2>
+      <h2>📋 Histórico de Movimentações</h2>
       <div style="overflow-x:auto;">
         <table id="historicoTable">
           <thead>
-            <tr>
-              <th>Data</th><th>Insumo</th><th>Tipo</th><th>Qtd</th><th>Preço Unit.</th><th>Total</th>
-            </tr>
+            <tr><th>Data</th><th>Insumo</th><th>Tipo</th><th>Movimento</th><th>Qtd</th><th>Responsável</th></tr>
           </thead>
-          <tbody id="historicoBody">
-            <tr><td colspan="6" class="empty">Carregando histórico...</td></tr>
-          </tbody>
+          <tbody id="historicoBody"></tbody>
         </table>
+      </div>
+      <div id="historicoEmpty" class="empty-state">
+        <div class="emoji">🗂️</div>
+        <p>Nenhuma movimentação registrada ainda.</p>
       </div>
     </div>
   </div>
@@ -155,314 +190,638 @@
 </div>
 
 <!-- MODAL ENTRADA -->
-<div class="modal" id="modalEntrada">
-  <div class="modal-content">
-    <h3><i class="fas fa-arrow-down-to-bracket"></i> Registrar Entrada</h3>
-    <p style="margin-bottom:14px;color:var(--cinza);" id="modalInsumoNome"></p>
-    <div class="form-grid">
+<div class="modal-overlay" id="modalEntrada">
+  <div class="modal">
+    <button class="close-btn" onclick="fecharModal('modalEntrada')">&times;</button>
+    <h3>📥 Registrar Entrada</h3>
+    <input type="hidden" id="entInsumoId">
+    <div class="form-group">
+      <label>Insumo</label>
+      <input type="text" id="entInsumoNome" readonly style="background:#f5f5f5;">
+    </div>
+    <div class="row">
       <div class="form-group">
         <label>Quantidade</label>
-        <input type="number" id="entQtd" min="0.01" step="0.01">
+        <input type="number" id="entQtd" min="0.01" step="0.01" placeholder="0">
       </div>
       <div class="form-group">
-        <label>Preço Unitário (R$)</label>
-        <input type="number" id="entPreco" min="0" step="0.01">
-      </div>
-      <div class="form-group" style="grid-column:1/-1;">
-        <label>Fornecedor / Observação</label>
-        <input type="text" id="entObs" placeholder="Opcional">
+        <label>Unidade</label>
+        <select id="entUnidade">
+          <option>Litros</option><option>Kg</option><option>Gramas</option><option>ml</option><option>Unidades</option><option>Sacos</option>
+        </select>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-cinza" onclick="closeModal('modalEntrada')">Cancelar</button>
-      <button class="btn btn-verde" onclick="confirmarEntrada()"><i class="fas fa-check"></i> Confirmar</button>
+    <div class="form-group">
+      <label>Responsável</label>
+      <input type="text" id="entResp" placeholder="Nome de quem registrou">
     </div>
+    <div class="form-group">
+      <label>Observação (opcional)</label>
+      <textarea id="entObs" rows="2" placeholder="Lote, validade, fornecedor..."></textarea>
+    </div>
+    <button class="btn" onclick="salvarEntrada()">✅ Confirmar Entrada</button>
   </div>
 </div>
 
 <!-- MODAL SAÍDA -->
-<div class="modal" id="modalSaida">
-  <div class="modal-content">
-    <h3><i class="fas fa-arrow-up-from-bracket"></i> Registrar Saída</h3>
-    <p style="margin-bottom:14px;color:var(--cinza);" id="saidaInsumoNome"></p>
-    <div class="form-grid">
+<div class="modal-overlay" id="modalSaida">
+  <div class="modal">
+    <button class="close-btn" onclick="fecharModal('modalSaida')">&times;</button>
+    <h3>📤 Registrar Saída</h3>
+    <input type="hidden" id="saiInsumoId">
+    <input type="hidden" id="saiQtdAtual">
+    <div class="form-group">
+      <label>Insumo</label>
+      <input type="text" id="saiInsumoNome" readonly style="background:#f5f5f5;">
+    </div>
+    <div class="row">
       <div class="form-group">
-        <label>Quantidade</label>
-        <input type="number" id="saiQtd" min="0.01" step="0.01">
+        <label>Disponível</label>
+        <input type="text" id="saiDisponivel" readonly style="background:#f5f5f5;">
       </div>
-      <div class="form-group" style="grid-column:1/-1;">
-        <label>Destino / Observação</label>
-        <input type="text" id="saiObs" placeholder="Opcional">
+      <div class="form-group">
+        <label>Quantidade Saída</label>
+        <input type="number" id="saiQtd" min="0.01" step="0.01" placeholder="0">
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-cinza" onclick="closeModal('modalSaida')">Cancelar</button>
-      <button class="btn btn-vermelho" onclick="confirmarSaida()"><i class="fas fa-check"></i> Confirmar</button>
+    <div class="form-group">
+      <label>Responsável</label>
+      <input type="text" id="saiResp" placeholder="Nome de quem retirou">
     </div>
+    <div class="form-group">
+      <label>Observação (opcional)</label>
+      <textarea id="saiObs" rows="2" placeholder="Destino, cultura, motivo..."></textarea>
+    </div>
+    <button class="btn btn-warning" onclick="salvarSaida()">📤 Confirmar Saída</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL='https://fzckjvvdqtyvunwxrbyl.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+// ============================================================
+// NAVEGAÇÃO DE ABAS - Função no topo absoluto
+// ============================================================
+function showTab(nome) {
+  try {
+    var abas = ['busca', 'estoque', 'historico'];
+    for (var i = 0; i < abas.length; i++) {
+      var conteudo = document.getElementById('tab-' + abas[i]);
+      var botao = document.getElementById('tab-btn-' + abas[i]);
+      if (conteudo) conteudo.style.display = 'none';
+      if (botao) botao.classList.remove('active');
+    }
+    var alvo = document.getElementById('tab-' + nome);
+    var btnAlvo = document.getElementById('tab-btn-' + nome);
+    if (alvo) alvo.style.display = 'block';
+    if (btnAlvo) btnAlvo.classList.add('active');
 
-let insumoSelecionado=null;
-let estoqueSelecionado=null;
-
-/* ===== NAVEGAÇÃO ===== */
-function showTab(nome){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+nome).classList.add('active');
-  event.currentTarget.classList.add('active');
-  if(nome==='estoque')loadEstoque();
-  if(nome==='historico')loadHistorico();
+    if (nome === 'estoque') carregarEstoque();
+    if (nome === 'historico') carregarHistorico();
+  } catch (e) {
+    console.error('Erro showTab:', e);
+  }
 }
 
-/* ===== TOAST ===== */
-function toast(msg,tipo='success'){
-  const el=document.getElementById('toast');
-  el.textContent=msg;
-  el.className='toast show '+tipo;
-  setTimeout(()=>el.className='toast',3000);
+// ============================================================
+// SUPABASE - Inicialização protegida
+// ============================================================
+var SUPABASE_URL = 'https://fzckjvvdqtyvunwxrbyl.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6Y2tqdnZkcXR5dnVud3hyYnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MjgxOTgsImV4cCI6MjA5OTAwNDE5OH0.TxS0GJF0egBbkYHvRQN1Kzvid2ysSneG75jJ3RiwXaM';
+var supabase = null;
+var supabaseOk = false;
+
+try {
+  if (window.supabase && window.supabase.createClient) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseOk = true;
+  } else {
+    console.warn('Biblioteca Supabase não carregada. Modo offline ativo.');
+  }
+} catch (err) {
+  console.error('Erro ao inicializar Supabase:', err);
+  supabaseOk = false;
 }
 
-/* ===== MODAL ===== */
-function openModal(id){document.getElementById(id).classList.add('active');}
-function closeModal(id){document.getElementById(id).classList.remove('active');}
+// ============================================================
+// BASE DE DADOS - 1000 itens injetados
+// ============================================================
+var TIPOS = ['Nativo', 'Herbicida', 'Inseticida', 'Fungicida', 'Acaricida', 'Bioinsumo', 'Adubo', 'Fertilizante', 'Regulador', 'Diluente'];
+var NOMES_BASE = [
+  'Roundup', 'Roundup WG', 'Roundup Transorb', 'Actara', 'Actara 250 WG', 'Score', 'Score 250 EC',
+  'Vertimec', 'Vertimec 18 EC', 'Nativo', 'Nativo SC', 'Pirate', 'Pirate 300 CS', 'Connect',
+  'Engeo Pleno', 'Karate Zeon', 'Karate 50 EC', 'Decis 25 EC', 'Decis Forte', 'Cypermetrina',
+  'Belt', 'Coragen', 'Premio', 'Rimon', 'Match', 'Lannate', 'Lannate BR', 'Hostathion',
+  'Rogor', 'Rogor 400', 'Tamaron', 'Tamaron BR', 'Foliar', 'Foliar Cuprico', 'Cuprozeb',
+  'Cobre', 'Oxicloreto de Cobre', 'Calda Bordalesa', 'Calda Sulfocalcica', 'Enxofre',
+  'Enxofre Molhavel', 'Cosavet', 'Kumulus', 'Thiovit', 'Cercobin', 'Cercobin 700',
+  'Derosal', 'Bavistin', 'Benomil', 'Benlate', 'Topsin', 'Topsin M', 'Ridomil',
+  'Ridomil Gold', 'Metalaxil', 'Metalaxil-M', 'Mancozebe', 'Manzate', 'Dithane',
+  'Dithane NT', 'Frowncide', 'Aliette', 'Fosetil', 'Fosetil Al', 'Myclobutanil',
+  'Systhane', 'Tebuconazol', 'Folicur', 'Triadimefon', 'Bayleton', 'Propiconazol',
+  'Tilt', 'Tilt 250 EC', 'Ciproconazol', 'Alto 100', 'Azoxistrobina', 'Amistar',
+  'Amistar Top', 'Piraclostrobina', 'Comet', 'Cabrio', 'Fluxapiroxade', 'Orkestra',
+  'Trifloxistrobina', 'Sphere', 'Difenoconazol', 'Score 250', 'Tebuconazol+Trifloxistrobina',
+  'Nativo Plus', 'Azoxistrobina+Difenoconazol', 'Pristine', 'Bellis', 'Bacillus',
+  'Bacillus thuringiensis', 'Bt', 'Dipel', 'Thuricide', 'Trichoderma', 'Trichoderma harzianum',
+  'Trichodermil', 'Beauveria bassiana', 'Balsam', 'Metarhizium', 'Metarhizium anisopliae',
+  'Nomuraea', 'Paecilomyces', 'Verticillium', 'Azospirillum', 'Bradyrhizobium',
+  'Rhizobium', 'Micorriza', 'Fungos Micorrizicos', 'Acidos Humicos', 'Acidos Fulvicos',
+  'Humus', 'Compostagem', 'Vinhaca', 'Torta de Mamona', 'Farinha de Osso', 'Cinza Vegetal',
+  'Biofertilizante', 'Supermagro', 'EM', 'Microorganismos Eficazes', 'NPK 20-05-20',
+  'NPK 08-28-16', 'NPK 04-14-08', 'NPK 06-30-06', 'NPK 10-10-10', 'NPK 20-10-20',
+  'NPK 15-15-15', 'NPK 15-05-23', 'NPK 25-05-20', 'Ureia', 'Ureia Purificada',
+  'Sulfato de Amonia', 'Cloreto de Potassio', 'Cloreto de Potassio Branco',
+  'Sulfato de Potassio', 'Nitrato de Potassio', 'Nitrato de Calcio', 'Nitrato de Amonio',
+  'MAP', 'DAP', 'Superfosfato Simples', 'Superfosfato Triplo', 'Fosfato Monoamonia',
+  'Fosfato Diamonio', 'Calcario Dolomitico', 'Calcario Calcitico', 'Calcario Magnesiano',
+  'Gesso Agricola', 'FTE', 'FTE BR-12', 'FTE BR-16', 'Micronutrientes', 'Zinco',
+  'Sulfato de Zinco', 'Boro', 'Acido Borico', 'Borax', 'Manganes', 'Sulfato de Manganes',
+  'Cobre Folia', 'Sulfato de Cobre', 'Molibdenio', 'Molibdato de Sodio', 'Ferro',
+  'Sulfato de Ferro', 'Magnesio', 'Sulfato de Magnesio', 'Calcio Folia', 'Cloreto de Calcio',
+  'Aminoacidos', 'Bioamino', 'Aminoplant', 'Fosfito', 'Fosfito de Potassio',
+  'Fosfito de Calcio', 'Silicio', 'Silicato de Potassio', 'Silicato de Calcio',
+  'Extrato de Algas', 'Ascophyllum', 'Kelpak', 'Cytokin', 'Auxina', 'Giberelina',
+  'Acido Giberelico', 'Pro-Gibb', 'Cycocel', 'Clormequat', 'Paclobutrazol', 'Cultar',
+  'Etileno', 'Ethephon', 'Ethrel', 'Aminoetoxivinilglicina', 'AVG', 'Retardante',
+  'Tiba', 'Mepiquat', 'Pix', 'Clothianidin', 'Poncho', 'Imidacloprido', 'Gaucho',
+  'Tiametoxam', 'Cruiser', 'Acetamiprido', 'Mospilan', 'Tiacloprido', 'Calypso',
+  'Dinotefurano', 'Starkle', 'Clorantraniliprole', 'Coragen', 'Ciantraniliprole',
+  'Benevia', 'Clorantraniliprole+Lambda', 'Belt Expert', 'Emamectina', 'Proclaim',
+  'Emamectina Benzoato', 'Avermectina', 'Abamectina', 'Abamectina 18 EC', 'Vertimec 18',
+  'Milbemectina', 'Milbeknock', 'Espinosade', 'Tracer', 'Success', 'Spinetoram',
+  'Radiant', 'Indoxacarbe', 'Avaunt', 'Metaflumizona', 'Alverde', 'Clorfenapir',
+  'Sunfire', 'Pirate 300', 'Bifentrina', 'Talstar', 'Deltametrina', 'Decis',
+  'Lambda-Cialotrina', 'Karate', 'Gama-Cialotrina', 'Nexide', 'Permetrina', 'Pounce',
+  'Esfenvalerato', 'Sumidan', 'Fipronil', 'Regent', 'Etofenprox', 'Trebon',
+  'Pirimifos-Metil', 'Actellic', 'Clorpirifos', 'Lorsban', 'Diazinon', 'Diazinol',
+  'Aldicarb', 'Temik', 'Carbofurano', 'Furadan', 'Aldrin', 'Mirex', 'Formicida',
+  'Isca Formicida', 'Isca Citros', 'Mirex-S', 'Blitz', 'Formicida Pó', 'Acido Formico',
+  'Glifosato', 'Glifosato 480', 'Glifosato 360', 'Glifosato 540', 'Roundup Original',
+  'Roundup Ultra', 'Roundup WG 680', 'Glifosato Sal Amonio', 'Glifosato Isopropilamina',
+  'Glifosato Potassico', 'Zapp', 'Zapp Qi', 'Nortox', 'Nortox SC', 'Lograto',
+  'Finale', 'Paraquat', 'Gramoxone', 'Diquat', 'Reglone', 'Glufosinato', 'Liberty',
+  'Finale 200', 'Basta', 'MSMA', 'Venzar', 'Hexazinona', 'Velpar', 'Diuron',
+  'Diuron 800', 'Velpar K', 'Bromacil', 'Hyvar X', 'Tebutiuron', 'Gratil', 'Imazapique',
+  'Imazapyr', 'Imazetapir', 'Pivot', 'Alague', 'Imazamox', 'Imazaque', 'Sulfentrazone',
+  'Boral', 'Carfentrazona', 'Aurora', 'Lactofen', 'Cobra', 'Fomesafen', 'Flex',
+  'Acifluorfem', 'Blazer', 'Oxifluorfem', 'Goal', 'Bifenox', 'Modown', 'Nitrofen',
+  'Aclonifen', 'Challenge', 'Bentazon', 'Basagran', 'Pirimidato', 'Piriminobac',
+  'Pirazosulfuron', 'Nominee', 'Haloxyfop', 'Verdict', 'Fluazifop', 'Fusilade',
+  'Sethoxydim', 'Nabu', 'Cletodim', 'Select', 'Quizalofop', 'Targa', 'Haloxyfop-R',
+  'Galigan', 'Goal BR', 'Oxyfluorfen', 'Oxadiazon', 'Ronstar', 'Oxadiargyl', 'Raft',
+  'Pendimethalin', 'Pendimethalin 500', 'Stomp', 'Herbadox', 'Trifluralin', 'Premerlin',
+  'Metolachlor', 'Dual Gold', 'S-Metolachlor', 'Dual', 'Atrazina', 'Atrazina 500',
+  'Atrazina 600', 'Gesaprim', 'Simazina', 'Gesatop', 'Cianazina', 'Bladex',
+  'Metribuzin', 'Sencor', 'Linuron', 'Lorox', 'Tebutiurom', 'Tebuthiuron', 'Imazaquim',
+  'Scepter', 'Chlorimuron', 'Classic', 'Nicosulfuron', 'Sanson', 'Rimsulfuron',
+  'Titus', 'Haloxyfop-P', 'Verdict 126', 'Clethodim', 'Clethodim 240', 'Select Plus',
+  'Fluazifop-P', 'Fusilade Forte', 'Haloxyfop-Metil', 'Gallant', 'Diclofop', 'Illoxan',
+  'Tralkoxydim', 'Grasp', 'Butroxydim', 'Falcon', 'Cycloxydim', 'Focus', 'Sethoxydim',
+  'Poast', 'Alloxydim', 'Fervinal', 'Bentazon', 'Basagran 600', 'Bentazon+S', 'Adjuvante',
+  'Oleo Mineral', 'Oleo Vegetal', 'Oleo Essencial', 'Espalhante', 'Adesivo', 'Fixador',
+  'Silicone', 'Silwet', 'Break-Thru', 'Antideriva', 'Buffer', 'Redutor de pH',
+  'Acidificante', 'Corante', 'Marcador', 'Azul de Metileno', 'Calda', 'Sulfato de Cobre',
+  'Caldas', 'Pasta', 'Pasta Bordalesa', 'Poda', 'Pasta de Poda', 'Cicatrizante',
+  'Cera', 'Cera de Poda', 'Verniz', 'Selante', 'Hidratante', 'Umectante', 'Vegetal',
+  'Nativo SC 300', 'Nativo SC 600', 'Nativo WG', 'Nativo Plus WG', 'Nativo Gold',
+  'Bioinsumo Liquido', 'Bioinsumo Solido', 'Bioinsumo Pó', 'Bioinsumo Granulado',
+  'Bioinsumo Pastoso', 'Biofungicida', 'Bioinseticida', 'Bioacaricida', 'Bionematicida',
+  'Biofertilizante Liquido', 'Biofertilizante Solido', 'Compostagem Liquida', 'Vermicompost',
+  'Humus Liquido', 'Chá de Compostagem', 'Chá de Estrume', 'Bioestimulante', 'Promotor',
+  'Ativador', 'Indutor', 'Indutor de Resistencia', 'Acibenzolar', 'Bion', 'Harpina',
+  'Messenger', 'Quitosana', 'Biozeol', 'Zeolita', 'Perlite', 'Vermiculita', 'Turfa',
+  'Substrato', 'Substrato Organico', 'Substrato Vegetal', 'Muda', 'Semente', 'Semente Tratada',
+  'Semente Recoberta', 'Inoculante', 'Inoculante Liquido', 'Inoculante Turfa', 'Peletizado',
+  'Pellet', 'Microgranulo', 'Granulado', 'Pó Molhavel', 'Concentrado Emulsionavel',
+  'Suspensao Concentrada', 'Graanulos Dispersiveis', 'Pó Solvel', 'Concentrado Solvel',
+  'Capsulas', 'Microencapsulado', 'Isca', 'Isca Toxica', 'Isca Atrativa', 'Feromonio',
+  'Feromonio Sexual', 'Armadilha', 'Armadilha Adesiva', 'Armadilha Luminosa', 'Delta',
+  'Delta Trap', 'Funil', 'Pitfall', 'Isca Liquida', 'Isca Gel', 'Isca Granulada'
+];
 
-/* ===== BUSCA ===== */
-async function searchInsumos(){
-  const termo=document.getElementById('searchInput').value.trim();
-  const container=document.getElementById('searchResults');
-  if(!termo){container.innerHTML='<div class="empty">Digite um termo para buscar.</div>';return;}
-  container.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
-  try{
-    const {data,error}=await supabase.from('insumos')
+function gerarBaseDados() {
+  var base = [];
+  var id = 1;
+  for (var n = 0; n < NOMES_BASE.length && id <= 1000; n++) {
+    var nome = NOMES_BASE[n];
+    var tipo = TIPOS[n % TIPOS.length];
+    base.push({
+      id: id++,
+      nome: nome,
+      tipo: tipo,
+      descricao: gerarDescricao(nome, tipo),
+      unidade_padrao: gerarUnidade(tipo)
+    });
+  }
+  // Completar até 1000 com variações numeradas
+  var idx = 0;
+  while (id <= 1000) {
+    var nomeBase = NOMES_BASE[idx % NOMES_BASE.length];
+    var tipo = TIPOS[idx % TIPOS.length];
+    var sufixo = ' ' + (Math.floor(id / NOMES_BASE.length) + 1);
+    base.push({
+      id: id++,
+      nome: nomeBase + sufixo,
+      tipo: tipo,
+      descricao: gerarDescricao(nomeBase, tipo),
+      unidade_padrao: gerarUnidade(tipo)
+    });
+    idx++;
+  }
+  return base;
+}
+
+function gerarDescricao(nome, tipo) {
+  var descricoes = {
+    'Nativo': 'Fungicida sistêmico de amplo espectro para controle de doenças.',
+    'Herbicida': 'Herbicida para controle de plantas daninhas em culturas.',
+    'Inseticida': 'Inseticida para controle de pragas e insetos nocivos.',
+    'Fungicida': 'Fungicida protetor e curativo contra fungos fitopatogênicos.',
+    'Acaricida': 'Acaricida para controle de ácaros em culturas agrícolas.',
+    'Bioinsumo': 'Bioinsumo de origem biológica para agricultura sustentável.',
+    'Adubo': 'Adubo para correção e enriquecimento do solo.',
+    'Fertilizante': 'Fertilizante para nutrição vegetal e desenvolvimento.',
+    'Regulador': 'Regulador de crescimento para manejo fisiológico.',
+    'Diluente': 'Diluente e adjuvante para caldas de aplicação.'
+  };
+  return descricoes[tipo] || 'Insumo agrícola para manejo de culturas.';
+}
+
+function gerarUnidade(tipo) {
+  var map = {
+    'Nativo': 'Litros', 'Herbicida': 'Litros', 'Inseticida': 'Litros',
+    'Fungicida': 'Gramas', 'Acaricida': 'Litros', 'Bioinsumo': 'Gramas',
+    'Adubo': 'Kg', 'Fertilizante': 'Kg', 'Regulador': 'Gramas', 'Diluente': 'Litros'
+  };
+  return map[tipo] || 'Unidades';
+}
+
+var BASE_DADOS = gerarBaseDados();
+
+// ============================================================
+// UTILITÁRIOS
+// ============================================================
+function showToast(msg, isError) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function() { t.className = 'toast' + (isError ? ' error' : ''); }, 3000);
+}
+
+function abrirModal(id) {
+  var m = document.getElementById(id);
+  if (m) m.classList.add('show');
+}
+function fecharModal(id) {
+  var m = document.getElementById(id);
+  if (m) m.classList.remove('show');
+}
+
+function limparCampos(prefixo) {
+  var campos = ['InsumoId', 'InsumoNome', 'Qtd', 'Unidade', 'Resp', 'Obs', 'QtdAtual', 'Disponivel'];
+  for (var i = 0; i < campos.length; i++) {
+    var el = document.getElementById(prefixo + campos[i]);
+    if (el) el.value = '';
+  }
+}
+
+// ============================================================
+// BUSCA DE INSUMOS
+// ============================================================
+function filtrarInsumos() {
+  var termo = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  var container = document.getElementById('searchResults');
+  var empty = document.getElementById('searchEmpty');
+  container.innerHTML = '';
+
+  var lista = BASE_DADOS;
+  if (termo.length > 0) {
+    lista = BASE_DADOS.filter(function(item) {
+      return item.nome.toLowerCase().indexOf(termo) !== -1 ||
+             item.tipo.toLowerCase().indexOf(termo) !== -1;
+    });
+  }
+
+  if (lista.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  var limite = Math.min(lista.length, 60);
+  for (var i = 0; i < limite; i++) {
+    var item = lista[i];
+    var div = document.createElement('div');
+    div.className = 'result-item';
+    var badgeClass = item.tipo === 'Bioinsumo' ? 'badge-bio' : 'badge-in';
+    div.innerHTML =
+      '<div class="ri-name">' + escapeHtml(item.nome) + '</div>' +
+      '<span class="badge ' + badgeClass + '">' + escapeHtml(item.tipo) + '</span>' +
+      '<div class="ri-desc">' + escapeHtml(item.descricao) + '</div>';
+    div.setAttribute('onclick', 'abrirEntrada(' + item.id + ')');
+    container.appendChild(div);
+  }
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function buscarItemPorId(id) {
+  for (var i = 0; i < BASE_DADOS.length; i++) {
+    if (BASE_DADOS[i].id == id) return BASE_DADOS[i];
+  }
+  return null;
+}
+
+// ============================================================
+// ENTRADA
+// ============================================================
+function abrirEntrada(insumoId) {
+  var item = buscarItemPorId(insumoId);
+  if (!item) { showToast('Insumo não encontrado.', true); return; }
+  limparCampos('ent');
+  document.getElementById('entInsumoId').value = item.id;
+  document.getElementById('entInsumoNome').value = item.nome;
+  document.getElementById('entUnidade').value = item.unidade_padrao;
+  abrirModal('modalEntrada');
+}
+
+async function salvarEntrada() {
+  var insumoId = document.getElementById('entInsumoId').value;
+  var insumoNome = document.getElementById('entInsumoNome').value;
+  var qtd = parseFloat(document.getElementById('entQtd').value);
+  var unidade = document.getElementById('entUnidade').value;
+  var resp = document.getElementById('entResp').value || 'Não informado';
+  var obs = document.getElementById('entObs').value || '';
+  var item = buscarItemPorId(insumoId);
+
+  if (!insumoId || !item) { showToast('Selecione um insumo válido.', true); return; }
+  if (isNaN(qtd) || qtd <= 0) { showToast('Informe uma quantidade válida.', true); return; }
+
+  var registro = {
+    insumo_id: insumoId,
+    insumo_nome: item.nome,
+    tipo: item.tipo,
+    quantidade: qtd,
+    unidade: unidade,
+    responsavel: resp,
+    observacao: obs,
+    movimento: 'entrada',
+    data: new Date().toISOString()
+  };
+
+  if (!supabaseOk || !supabase) {
+    showToast('Supabase indisponível. Verifique conexão.', true);
+    return;
+  }
+
+  try {
+    // 1. Salvar movimentação
+    var { error: errMov } = await supabase.from('movimentacoes').insert([registro]);
+    if (errMov) throw errMov;
+
+    // 2. UPSERT em estoque (onConflict: insumo_id)
+    var { data: existente, error: errBusca } = await supabase
+      .from('estoque')
+      .select('id, quantidade')
+      .eq('insumo_id', insumoId)
+      .maybeSingle();
+
+    if (errBusca) throw errBusca;
+
+    if (existente) {
+      var novaQtd = (parseFloat(existente.quantidade) || 0) + qtd;
+      var { error: errUpd } = await supabase
+        .from('estoque')
+        .update({
+          quantidade: novaQtd,
+          unidade: unidade,
+          insumo_nome: item.nome,
+          tipo: item.tipo,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('insumo_id', insumoId);
+      if (errUpd) throw errUpd;
+    } else {
+      var { error: errIns } = await supabase
+        .from('estoque')
+        .upsert([{
+          insumo_id: insumoId,
+          insumo_nome: item.nome,
+          tipo: item.tipo,
+          quantidade: qtd,
+          unidade: unidade,
+          atualizado_em: new Date().toISOString()
+        }], { onConflict: 'insumo_id' });
+      if (errIns) throw errIns;
+    }
+
+    showToast('Entrada registrada com sucesso! ✅');
+    fecharModal('modalEntrada');
+    carregarEstoque();
+  } catch (e) {
+    console.error('Erro salvarEntrada:', e);
+    showToast('Erro ao registrar entrada: ' + (e.message || e), true);
+  }
+}
+
+// ============================================================
+// SAÍDA
+// ============================================================
+function abrirSaida(insumoId, qtdAtual) {
+  var item = buscarItemPorId(insumoId);
+  if (!item) { showToast('Insumo não encontrado.', true); return; }
+  limparCampos('sai');
+  document.getElementById('saiInsumoId').value = insumoId;
+  document.getElementById('saiInsumoNome').value = item.nome;
+  document.getElementById('saiQtdAtual').value = qtdAtual;
+  document.getElementById('saiDisponivel').value = qtdAtual + ' ' + item.unidade_padrao;
+  abrirModal('modalSaida');
+}
+
+async function salvarSaida() {
+  var insumoId = document.getElementById('saiInsumoId').value;
+  var qtdAtual = parseFloat(document.getElementById('saiQtdAtual').value) || 0;
+  var qtd = parseFloat(document.getElementById('saiQtd').value);
+  var resp = document.getElementById('saiResp').value || 'Não informado';
+  var obs = document.getElementById('saiObs').value || '';
+  var item = buscarItemPorId(insumoId);
+
+  if (!insumoId || !item) { showToast('Insumo inválido.', true); return; }
+  if (isNaN(qtd) || qtd <= 0) { showToast('Informe uma quantidade válida.', true); return; }
+  if (qtd > qtdAtual) { showToast('Quantidade superior ao disponível em estoque.', true); return; }
+
+  var registro = {
+    insumo_id: insumoId,
+    insumo_nome: item.nome,
+    tipo: item.tipo,
+    quantidade: qtd,
+    unidade: item.unidade_padrao,
+    responsavel: resp,
+    observacao: obs,
+    movimento: 'saida',
+    data: new Date().toISOString()
+  };
+
+  if (!supabaseOk || !supabase) {
+    showToast('Supabase indisponível. Verifique conexão.', true);
+    return;
+  }
+
+  try {
+    // 1. Salvar movimentação de saída
+    var { error: errMov } = await supabase.from('movimentacoes').insert([registro]);
+    if (errMov) throw errMov;
+
+    // 2. Subtrair do estoque
+    var novaQtd = qtdAtual - qtd;
+    var { error: errUpd } = await supabase
+      .from('estoque')
+      .update({
+        quantidade: novaQtd,
+        atualizado_em: new Date().toISOString()
+      })
+      .eq('insumo_id', insumoId);
+    if (errUpd) throw errUpd;
+
+    showToast('Saída registrada com sucesso! 📤');
+    fecharModal('modalSaida');
+    carregarEstoque();
+  } catch (e) {
+    console.error('Erro salvarSaida:', e);
+    showToast('Erro ao registrar saída: ' + (e.message || e), true);
+  }
+}
+
+// ============================================================
+// CARREGAR ESTOQUE
+// ============================================================
+async function carregarEstoque() {
+  var tbody = document.getElementById('estoqueBody');
+  var empty = document.getElementById('estoqueEmpty');
+  var stats = document.getElementById('statsContainer');
+  tbody.innerHTML = '';
+  stats.innerHTML = '';
+
+  if (!supabaseOk || !supabase) {
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'Supabase indisponível. Verifique a conexão.';
+    return;
+  }
+
+  try {
+    var { data, error } = await supabase.from('estoque').select('*').order('insumo_nome', { ascending: true });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    var totalItens = data.length;
+    var totalQtd = 0;
+    var tiposCount = {};
+    for (var i = 0; i < data.length; i++) {
+      totalQtd += parseFloat(data[i].quantidade) || 0;
+      var t = data[i].tipo || 'Outros';
+      tiposCount[t] = (tiposCount[t] || 0) + 1;
+    }
+
+    stats.innerHTML =
+      '<div class="stat-card"><div class="label">Itens em Estoque</div><div class="value">' + totalItens + '</div></div>' +
+      '<div class="stat-card"><div class="label">Quantidade Total</div><div class="value">' + totalQtd.toFixed(2) + '</div></div>' +
+      '<div class="stat-card"><div class="label">Tipos Diferentes</div><div class="value">' + Object.keys(tiposCount).length + '</div></div>';
+
+    for (var j = 0; j < data.length; j++) {
+      var row = data[j];
+      var tr = document.createElement('tr');
+      var qtd = parseFloat(row.quantidade) || 0;
+      var badgeClass = row.tipo === 'Bioinsumo' ? 'badge-bio' : 'badge-in';
+      tr.innerHTML =
+        '<td><strong>' + escapeHtml(row.insumo_nome || '') + '</strong></td>' +
+        '<td><span class="badge ' + badgeClass + '">' + escapeHtml(row.tipo || '') + '</span></td>' +
+        '<td>' + qtd.toFixed(2) + '</td>' +
+        '<td>' + escapeHtml(row.unidade || '') + '</td>' +
+        '<td><button class="btn btn-warning" style="padding:6px 12px;font-size:13px;" onclick="abrirSaida(\'' + row.insumo_id + '\', ' + qtd + ')">📤 Saída</button></td>';
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    console.error('Erro carregarEstoque:', e);
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'Erro ao carregar estoque: ' + (e.message || e);
+  }
+}
+
+// ============================================================
+// CARREGAR HISTÓRICO
+// ============================================================
+async function carregarHistorico() {
+  var tbody = document.getElementById('historicoBody');
+  var empty = document.getElementById('historicoEmpty');
+  tbody.innerHTML = '';
+
+  if (!supabaseOk || !supabase) {
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'Supabase indisponível. Verifique a conexão.';
+    return;
+  }
+
+  try {
+    var { data, error } = await supabase
+      .from('movimentacoes')
       .select('*')
-      .ilike('nome','%'+termo+'%')
-      .limit(50);
-    if(error)throw error;
-    if(!data||data.length===0){
-      container.innerHTML='<div class="empty">Nenhum insumo encontrado.</div>';return;
-    }
-    container.innerHTML=data.map(i=>`
-      <div class="result-item">
-        <div class="info">
-          <strong>${i.nome}</strong>
-          <span>${i.unidade||'un'} ${i.categoria?'· '+i.categoria:''}</span>
-        </div>
-        <div class="actions">
-          <button class="btn btn-verde" onclick="abrirEntrada(${i.id},'${(i.nome||'').replace(/'/g,"\\'")}')"><i class="fas fa-plus"></i> Entrada</button>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    console.error(e);
-    container.innerHTML='<div class="empty">Erro ao buscar: '+e.message+'</div>';
-  }
-}
-
-function abrirEntrada(id,nome){
-  insumoSelecionado=id;
-  document.getElementById('modalInsumoNome').textContent=nome;
-  document.getElementById('entQtd').value='';
-  document.getElementById('entPreco').value='';
-  document.getElementById('entObs').value='';
-  openModal('modalEntrada');
-}
-
-/* ===== ENTRADA (UPSERT com preço médio) ===== */
-async function confirmarEntrada(){
-  const qtd=parseFloat(document.getElementById('entQtd').value);
-  const preco=parseFloat(document.getElementById('entPreco').value);
-  const obs=document.getElementById('entObs').value;
-  if(!qtd||qtd<=0){toast('Informe uma quantidade válida.','error');return;}
-  if(!preco||preco<0){toast('Informe um preço válido.','error');return;}
-  if(!insumoSelecionado){toast('Selecione um insumo.','error');return;}
-
-  try{
-    // Busca estoque atual
-    const {data:atual}=await supabase.from('estoque').select('*').eq('insumo_id',insumoSelecionado).maybeSingle();
-
-    let novaQtd=qtd;
-    let novoPrecoMedio=preco;
-    let novoTotal=preco*qtd;
-
-    if(atual){
-      const qtdAtual=parseFloat(atual.quantidade)||0;
-      const totalAtual=parseFloat(atual.total_investido)||0;
-      novaQtd=qtdAtual+qtd;
-      novoTotal=totalAtual+(preco*qtd);
-      novoPrecoMedio=novaQtd>0?novoTotal/novaQtd:0;
-    }
-
-    // UPSERT estoque
-    const {error:errEst}=await supabase.from('estoque').upsert({
-      insumo_id:insumoSelecionado,
-      quantidade:novaQtd,
-      preco_medio:novoPrecoMedio,
-      total_investido:novoTotal
-    },{onConflict:'insumo_id'});
-    if(errEst)throw errEst;
-
-    // Registra movimentação
-    const {error:errMov}=await supabase.from('movimentacoes').insert({
-      insumo_id:insumoSelecionado,
-      tipo:'entrada',
-      quantidade:qtd,
-      preco_unitario:preco,
-      total_investido:preco*qtd,
-      observacao:obs
-    });
-    if(errMov)throw errMov;
-
-    toast('Entrada registrada com sucesso!');
-    closeModal('modalEntrada');
-    searchInsumos();
-  }catch(e){
-    console.error(e);
-    toast('Erro: '+e.message,'error');
-  }
-}
-
-/* ===== SAÍDA ===== */
-function abrirSaida(id,nome,qtdAtual){
-  estoqueSelecionado=id;
-  document.getElementById('saidaInsumoNome').textContent=nome+' (Disponível: '+qtdAtual+')';
-  document.getElementById('saiQtd').value='';
-  document.getElementById('saiQtd').max=qtdAtual;
-  document.getElementById('saiObs').value='';
-  openModal('modalSaida');
-}
-
-async function confirmarSaida(){
-  const qtd=parseFloat(document.getElementById('saiQtd').value);
-  const obs=document.getElementById('saiObs').value;
-  if(!qtd||qtd<=0){toast('Informe uma quantidade válida.','error');return;}
-  if(!estoqueSelecionado){toast('Selecione um item.','error');return;}
-
-  try{
-    const {data:atual}=await supabase.from('estoque').select('*').eq('insumo_id',estoqueSelecionado).maybeSingle();
-    if(!atual){toast('Item não encontrado no estoque.','error');return;}
-    const qtdAtual=parseFloat(atual.quantidade)||0;
-    if(qtd>qtdAtual){toast('Quantidade superior ao disponível.','error');return;}
-
-    const novaQtd=qtdAtual-qtd;
-    const precoMedio=parseFloat(atual.preco_medio)||0;
-    const novoTotal=novaQtd*precoMedio;
-
-    const {error:errEst}=await supabase.from('estoque').update({
-      quantidade:novaQtd,
-      total_investido:novoTotal
-    }).eq('insumo_id',estoqueSelecionado);
-    if(errEst)throw errEst;
-
-    const {error:errMov}=await supabase.from('movimentacoes').insert({
-      insumo_id:estoqueSelecionado,
-      tipo:'saida',
-      quantidade:qtd,
-      preco_unitario:precoMedio,
-      total_investido:precoMedio*qtd,
-      observacao:obs
-    });
-    if(errMov)throw errMov;
-
-    toast('Saída registrada com sucesso!');
-    closeModal('modalSaida');
-    loadEstoque();
-  }catch(e){
-    console.error(e);
-    toast('Erro: '+e.message,'error');
-  }
-}
-
-/* ===== ESTOQUE ===== */
-async function loadEstoque(){
-  const body=document.getElementById('estoqueBody');
-  body.innerHTML='<tr><td colspan="6" class="empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
-  try{
-    const {data,error}=await supabase.from('estoque')
-      .select('*, insumos(nome,unidade,categoria)')
-      .order('insumos(nome)',{ascending:true});
-    if(error)throw error;
-    if(!data||data.length===0){
-      body.innerHTML='<tr><td colspan="6" class="empty">Nenhum item em estoque.</td></tr>';
-      document.getElementById('statsContainer').innerHTML='';
-      return;
-    }
-    body.innerHTML=data.map(e=>{
-      const nome=e.insumos?e.insumos.nome:'Insumo #'+e.insumo_id;
-      const un=e.insumos?e.insumos.unidade:'';
-      const qtd=parseFloat(e.quantidade)||0;
-      const pm=parseFloat(e.preco_medio)||0;
-      const tot=parseFloat(e.total_investido)||0;
-      return `<tr>
-        <td><strong>${nome}</strong></td>
-        <td>${un}</td>
-        <td>${qtd}</td>
-        <td>R$ ${pm.toFixed(2)}</td>
-        <td>R$ ${tot.toFixed(2)}</td>
-        <td><button class="btn btn-vermelho" onclick="abrirSaida(${e.insumo_id},'${nome.replace(/'/g,"\\'")}',${qtd})"><i class="fas fa-minus"></i> Saída</button></td>
-      </tr>`;
-    }).join('');
-
-    // Stats
-    const totalItens=data.length;
-    const totalInvestido=data.reduce((s,e)=>s+(parseFloat(e.total_investido)||0),0);
-    const totalQtd=data.reduce((s,e)=>s+(parseFloat(e.quantidade)||0),0);
-    document.getElementById('statsContainer').innerHTML=`
-      <div class="stat-card"><i class="fas fa-boxes-stacked"></i><div class="label">Itens em Estoque</div><div class="value">${totalItens}</div></div>
-      <div class="stat-card"><i class="fas fa-scale-balanced"></i><div class="label">Quantidade Total</div><div class="value">${totalQtd.toFixed(2)}</div></div>
-      <div class="stat-card"><i class="fas fa-sack-dollar"></i><div class="label">Total Investido</div><div class="value">R$ ${totalInvestido.toFixed(2)}</div></div>
-    `;
-  }catch(e){
-    console.error(e);
-    body.innerHTML='<tr><td colspan="6" class="empty">Erro: '+e.message+'</td></tr>';
-  }
-}
-
-/* ===== HISTÓRICO ===== */
-async function loadHistorico(){
-  const body=document.getElementById('historicoBody');
-  body.innerHTML='<tr><td colspan="6" class="empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
-  try{
-    const {data,error}=await supabase.from('movimentacoes')
-      .select('*, insumos(nome,unidade)')
-      .order('created_at',{ascending:false})
+      .order('data', { ascending: false })
       .limit(200);
-    if(error)throw error;
-    if(!data||data.length===0){
-      body.innerHTML='<tr><td colspan="6" class="empty">Nenhuma movimentação registrada.</td></tr>';
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
       return;
     }
-    body.innerHTML=data.map(m=>{
-      const nome=m.insumos?m.insumos.nome:'Insumo #'+m.insumo_id;
-      const data=m.created_at?new Date(m.created_at).toLocaleString('pt-BR'):'-';
-      const qtd=parseFloat(m.quantidade)||0;
-      const pu=parseFloat(m.preco_unitario)||0;
-      const tot=parseFloat(m.total_investido)||0;
-      const badge=m.tipo==='entrada'?'<span class="badge badge-entrada">Entrada</span>':'<span class="badge badge-saida">Saída</span>';
-      return `<tr>
-        <td>${data}</td>
-        <td>${nome}</td>
-        <td>${badge}</td>
-        <td>${qtd}</td>
-        <td>R$ ${pu.toFixed(2)}</td>
-        <td>R$ ${tot.toFixed(2)}</td>
-      </tr>`;
-    }).join('');
-  }catch(e){
-    console.error(e);
-    body.innerHTML='<tr><td colspan="6" class="empty">Erro: '+e.message+'</td></tr>';
+    empty.style.display = 'none';
+
+    for (var i = 0; i < data.length; i++) {
+      var m = data[i];
+      var dataFmt = m.data ? new Date(m.data).toLocaleString('pt-BR') : '-';
+      var badge = m.movimento === 'entrada'
+        ? '<span class="badge badge-in">Entrada</span>'
+        : '<span class="badge badge-out">Saída</span>';
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + escapeHtml(dataFmt) + '</td>' +
+        '<td><strong>' + escapeHtml(m.insumo_nome || '') + '</strong></td>' +
+        '<td>' + escapeHtml(m.tipo || '') + '</td>' +
+        '<td>' + badge + '</td>' +
+        '<td>' + (parseFloat(m.quantidade) || 0).toFixed(2) + ' ' + escapeHtml(m.unidade || '') + '</td>' +
+        '<td>' + escapeHtml(m.responsavel || '') + '</td>';
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    console.error('Erro carregarHistorico:', e);
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'Erro ao carregar histórico: ' + (e.message || e);
   }
 }
 
-/* ===== INIT ===== */
-window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('searchInput').focus();
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  showTab('busca');
+  filtrarInsumos();
+});
+
+// Fechar modal ao clicar no overlay
+window.addEventListener('click', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('show');
+  }
 });
 </script>
 </body>
